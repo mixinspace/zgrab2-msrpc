@@ -109,20 +109,30 @@ type BindResult struct {
 	Error              string             `json:"error,omitempty"`
 }
 
-// EPMEndpoint is a parsed endpoint mapper record.
-type EPMEndpoint struct {
-	UUID       string `json:"uuid,omitempty"`
-	Version    string `json:"version,omitempty"`
-	Annotation string `json:"annotation,omitempty"`
+// EPMInterface is a grouped Endpoint Mapper interface record.
+type EPMInterface struct {
+	InterfaceUUID string   `json:"interface_uuid,omitempty"`
+	Version       string   `json:"version,omitempty"`
+	Bindings      []string `json:"bindings,omitempty"`
+	ObjectUUIDs   []string `json:"object_uuids,omitempty"`
+	Annotations   []string `json:"annotations,omitempty"`
+}
+
+// EPMUnresolved is an EPM record without a resolved interface UUID.
+type EPMUnresolved struct {
+	ObjectUUID string `json:"object_uuid,omitempty"`
 	Binding    string `json:"binding,omitempty"`
+	Annotation string `json:"annotation,omitempty"`
 }
 
 // EPMResult contains Endpoint Mapper lookup results.
 type EPMResult struct {
-	Success       bool          `json:"success"`
-	EndpointCount int           `json:"endpoint_count,omitempty"`
-	Endpoints     []EPMEndpoint `json:"endpoints,omitempty"`
-	Error         string        `json:"error,omitempty"`
+	Success         bool            `json:"success"`
+	InterfaceCount  int             `json:"interface_count,omitempty"`
+	UnresolvedCount int             `json:"unresolved_count,omitempty"`
+	Interfaces      []EPMInterface  `json:"interfaces,omitempty"`
+	Unresolved      []EPMUnresolved `json:"unresolved,omitempty"`
+	Error           string          `json:"error,omitempty"`
 }
 
 // IOXIDResult contains IObjectExporter::ServerAlive2 results.

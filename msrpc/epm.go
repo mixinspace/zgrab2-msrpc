@@ -56,6 +56,15 @@ type epmEntryRecord struct {
 	towerRef   uint32
 }
 
+type epmParsedRecord struct {
+	objectUUID    string
+	interfaceUUID string
+	versionMajor  uint16
+	versionMinor  uint16
+	binding       string
+	annotation    string
+}
+
 type ndrCursor struct {
 	buf []byte
 	idx int
@@ -108,7 +117,10 @@ func (c *ndrCursor) Align4() {
 // performEPMLookupConn executes a full Endpoint Mapper step on an existing connection:
 // bind to EPM interface first, then run paged ept_lookup requests.
 func (s *Scanner) performEPMLookupConn(conn net.Conn, target zgrab2.ScanTarget) (*EPMResult, *BindResult, error) {
-	result := &EPMResult{Endpoints: make([]EPMEndpoint, 0)}
+	result := &EPMResult{
+		Interfaces: make([]EPMInterface, 0),
+		Unresolved: make([]EPMUnresolved, 0),
+	}
 
 	bind, _, bindErr := s.performBind(conn, uuidEndpointMapper, 3, 0, 1, nil)
 	if bindErr != nil {
@@ -130,11 +142,15 @@ func (s *Scanner) performEPMLookupConn(conn net.Conn, target zgrab2.ScanTarget) 
 // performEPMLookup issues ept_lookup (opnum 2) requests and walks the entry_handle
 // cursor until the server returns a zero handle or page limit is reached.
 func (s *Scanner) performEPMLookup(conn net.Conn, target zgrab2.ScanTarget) (*EPMResult, error) {
-	result := &EPMResult{Endpoints: make([]EPMEndpoint, 0)}
+	result := &EPMResult{
+		Interfaces: make([]EPMInterface, 0),
+		Unresolved: make([]EPMUnresolved, 0),
+	}
 	callID := uint32(2)
 	var entryHandle [epmEntryHandleSize]byte
 	hadResponse := false
 	fallbackHost := target.Host()
+	records := make([]epmParsedRecord, 0)
 
 	for page := 0; page < maxEPMPages; page++ {
 		requestStub := buildEptLookupStub(entryHandle, uint32(s.config.MaxEntries))
@@ -160,14 +176,15 @@ func (s *Scanner) performEPMLookup(conn net.Conn, target zgrab2.ScanTarget) (*EP
 			break
 		}
 
-		endpoints, nextHandle, parseErr := parseEPMEntries(responseStub, fallbackHost)
+		parsedRecords, nextHandle, parseErr := parseEPMEntries(responseStub, fallbackHost)
 		if parseErr != nil {
 			// Best-effort extraction if strict NDR parsing fails.
 			updateEntryHandleFromStub(responseStub, &entryHandle)
-			result.Endpoints = append(result.Endpoints, buildFallbackEndpoints(responseStub, fallbackHost)...)
+			records = append(records, parsedRecords...)
+			records = append(records, buildFallbackRecords(responseStub, fallbackHost)...)
 		} else {
 			entryHandle = nextHandle
-			result.Endpoints = append(result.Endpoints, endpoints...)
+			records = append(records, parsedRecords...)
 		}
 
 		if isZeroEntryHandle(entryHandle) {
@@ -175,9 +192,12 @@ func (s *Scanner) performEPMLookup(conn net.Conn, target zgrab2.ScanTarget) (*EP
 		}
 	}
 
-	result.Endpoints = normalizeEPMEndpoints(result.Endpoints)
+	interfaces, unresolved := aggregateEPMRecords(records)
+	result.Interfaces = interfaces
+	result.Unresolved = unresolved
 	result.Success = hadResponse
-	result.EndpointCount = len(result.Endpoints)
+	result.InterfaceCount = len(interfaces)
+	result.UnresolvedCount = len(unresolved)
 	return result, nil
 }
 
@@ -203,23 +223,24 @@ func updateEntryHandleFromStub(stub []byte, entryHandle *[epmEntryHandleSize]byt
 	}
 }
 
-func buildFallbackEndpoints(stub []byte, fallbackHost string) []EPMEndpoint {
+func buildFallbackRecords(stub []byte, fallbackHost string) []epmParsedRecord {
 	towers := parseTowers(stub, fallbackHost)
 	annotations := extractAnnotations(stub)
 
-	endpoints := make([]EPMEndpoint, 0, len(towers))
+	records := make([]epmParsedRecord, 0, len(towers))
 	for i := range towers {
-		ep := EPMEndpoint{
-			UUID:    towers[i].InterfaceUUID,
-			Version: fmt.Sprintf("v%d.%d", towers[i].VersionMajor, towers[i].VersionMinor),
-			Binding: towers[i].Binding,
+		record := epmParsedRecord{
+			interfaceUUID: towers[i].InterfaceUUID,
+			versionMajor:  towers[i].VersionMajor,
+			versionMinor:  towers[i].VersionMinor,
+			binding:       towers[i].Binding,
 		}
 		if i < len(annotations) {
-			ep.Annotation = sanitizeAnnotation([]byte(annotations[i]))
+			record.annotation = sanitizeAnnotation([]byte(annotations[i]))
 		}
-		endpoints = append(endpoints, ep)
+		records = append(records, record)
 	}
-	return endpoints
+	return records
 }
 
 // parseEPMEntries decodes the NDR body returned by ept_lookup.
@@ -227,7 +248,7 @@ func buildFallbackEndpoints(stub []byte, fallbackHost string) []EPMEndpoint {
 //   - max_count + next_entry_handle
 //   - entries array with object UUID / annotation / tower reference
 //   - concatenated tower blobs
-func parseEPMEntries(stub []byte, fallbackHost string) ([]EPMEndpoint, [epmEntryHandleSize]byte, error) {
+func parseEPMEntries(stub []byte, fallbackHost string) ([]epmParsedRecord, [epmEntryHandleSize]byte, error) {
 	var nextHandle [epmEntryHandleSize]byte
 	cursor := newNDRCursor(stub, 0)
 
@@ -241,8 +262,11 @@ func parseEPMEntries(stub []byte, fallbackHost string) ([]EPMEndpoint, [epmEntry
 		return nil, nextHandle, err
 	}
 
-	endpoints := parseEPMEntryTowers(cursor, entries, fallbackHost)
-	return endpoints, nextHandle, nil
+	records, err := parseEPMEntryTowers(cursor, entries, fallbackHost)
+	if err != nil {
+		return records, nextHandle, err
+	}
+	return records, nextHandle, nil
 }
 
 func parseEPMHeader(cursor *ndrCursor, nextHandle *[epmEntryHandleSize]byte) (int, error) {
@@ -326,41 +350,48 @@ func parseEPMEntryRecords(cursor *ndrCursor, actualCount int) ([]epmEntryRecord,
 	return entries, nil
 }
 
-func parseEPMEntryTowers(cursor *ndrCursor, entries []epmEntryRecord, fallbackHost string) []EPMEndpoint {
-	endpoints := make([]EPMEndpoint, 0, len(entries))
-	var ok bool
+func parseEPMEntryTowers(cursor *ndrCursor, entries []epmEntryRecord, fallbackHost string) ([]epmParsedRecord, error) {
+	records := make([]epmParsedRecord, 0, len(entries))
 
 	for i := range entries {
-		ep := EPMEndpoint{
-			UUID:       entries[i].objectUUID,
-			Annotation: entries[i].annotation,
+		record := epmParsedRecord{
+			objectUUID: entries[i].objectUUID,
+			annotation: entries[i].annotation,
 		}
 
 		if entries[i].towerRef != 0 {
-			ep, ok = applyTowerData(cursor, ep, fallbackHost)
+			parsedRecord, ok := applyTowerData(cursor, record, fallbackHost)
 			if !ok {
-				break
+				return records, fmt.Errorf("short epm tower at index %d", i)
 			}
+			record = parsedRecord
 		}
 
-		if ep.UUID != "" || ep.Binding != "" || ep.Annotation != "" {
-			endpoints = append(endpoints, ep)
+		if hasRecordData(record) {
+			records = append(records, record)
 		}
 	}
 
-	return endpoints
+	return records, nil
 }
 
-func applyTowerData(cursor *ndrCursor, ep EPMEndpoint, fallbackHost string) (EPMEndpoint, bool) {
+func hasRecordData(record epmParsedRecord) bool {
+	return record.objectUUID != "" ||
+		record.interfaceUUID != "" ||
+		record.binding != "" ||
+		record.annotation != ""
+}
+
+func applyTowerData(cursor *ndrCursor, record epmParsedRecord, fallbackHost string) (epmParsedRecord, bool) {
 	if !cursor.Has(ndrUint32Size * 2) {
-		return ep, false
+		return record, false
 	}
 
 	towerMaxCountRaw, _ := cursor.ReadUint32()
 	towerLenRaw, _ := cursor.ReadUint32()
 	towerLen := int(towerLenRaw)
 	if towerLen < 0 {
-		return ep, false
+		return record, false
 	}
 
 	towerMaxCount := int(towerMaxCountRaw)
@@ -370,7 +401,7 @@ func applyTowerData(cursor *ndrCursor, ep EPMEndpoint, fallbackHost string) (EPM
 	}
 
 	if dataLen < 0 || !cursor.Has(dataLen) {
-		return ep, false
+		return record, false
 	}
 
 	towerData, _ := cursor.ReadBytes(dataLen)
@@ -378,14 +409,13 @@ func applyTowerData(cursor *ndrCursor, ep EPMEndpoint, fallbackHost string) (EPM
 
 	towerUUID, major, minor, binding, ok := parseTowerData(towerData, fallbackHost)
 	if ok {
-		if towerUUID != "" {
-			ep.UUID = towerUUID
-		}
-		ep.Version = fmt.Sprintf("v%d.%d", major, minor)
-		ep.Binding = binding
+		record.interfaceUUID = towerUUID
+		record.versionMajor = major
+		record.versionMinor = minor
+		record.binding = binding
 	}
 
-	return ep, true
+	return record, true
 }
 
 // parseTowerData decodes one RPC tower and extracts:
@@ -466,7 +496,9 @@ func parseTowers(blob []byte, fallbackHost string) []parsedTower {
 		major := binary.LittleEndian.Uint16(floors[0].LHS[towerIfaceMajorFrom:towerIfaceMajorTo])
 		minor := binary.LittleEndian.Uint16(floors[0].RHS[towerIfaceMinorFrom:towerIfaceMinorTo])
 		binding := floorsToBinding(floors[towerBindingFromFloor:], fallbackHost)
-		if uuid == "" { continue }
+		if uuid == "" {
+			continue
+		}
 
 		results = append(results, parsedTower{
 			Start:         start,
@@ -594,7 +626,6 @@ func sanitizeAnnotation(raw []byte) string {
 
 // extractAnnotations scans printable ASCII segments and keeps plausible annotation candidates.
 func extractAnnotations(blob []byte) []string {
-	found := make(map[string]bool)
 	out := make([]string, 0)
 
 	for i := 0; i < len(blob); i++ {
@@ -612,14 +643,12 @@ func extractAnnotations(blob []byte) []string {
 		}
 
 		candidate := strings.TrimSpace(string(blob[i:j]))
-		if looksLikeAnnotation(candidate) && !found[candidate] {
-			found[candidate] = true
+		if looksLikeAnnotation(candidate) {
 			out = append(out, candidate)
 		}
 		i = j
 	}
 
-	sort.Strings(out)
 	return out
 }
 
@@ -712,92 +741,128 @@ func hasDigit(s string) bool {
 	return false
 }
 
-// normalizeEPMEndpoints deduplicates and merges endpoint variants produced by strict/fallback paths.
-func normalizeEPMEndpoints(input []EPMEndpoint) []EPMEndpoint {
-	normalized := make([]EPMEndpoint, 0, len(input))
-	indexByKey := make(map[string]int, len(input))
-
-	for _, ep := range input {
-		ep = normalizeEndpointFields(ep)
-		if ep.UUID == "" && ep.Binding == "" && ep.Annotation == "" {
-			continue
-		}
-
-		key := endpointMergeKey(ep)
-		idx, exists := indexByKey[key]
-		if !exists {
-			indexByKey[key] = len(normalized)
-			normalized = append(normalized, ep)
-			continue
-		}
-
-		normalized[idx] = mergeEndpointVariants(normalized[idx], ep)
+func aggregateEPMRecords(input []epmParsedRecord) ([]EPMInterface, []EPMUnresolved) {
+	type interfaceAccumulator struct {
+		interfaceUUID string
+		version       string
+		bindings      map[string]struct{}
+		objectUUIDs   map[string]struct{}
+		annotations   map[string]struct{}
+	}
+	type unresolvedKey struct {
+		objectUUID string
+		binding    string
+		annotation string
 	}
 
-	sort.Slice(normalized, func(i, j int) bool {
-		if normalized[i].UUID != normalized[j].UUID {
-			return normalized[i].UUID < normalized[j].UUID
+	accumulators := make(map[string]*interfaceAccumulator)
+	unresolvedSet := make(map[unresolvedKey]struct{})
+	unresolved := make([]EPMUnresolved, 0)
+
+	for _, raw := range input {
+		record := normalizeParsedRecord(raw)
+		if record.interfaceUUID != "" {
+			version := formatEPMVersion(record.versionMajor, record.versionMinor)
+			key := record.interfaceUUID + "|" + version
+
+			acc, found := accumulators[key]
+			if !found {
+				acc = &interfaceAccumulator{
+					interfaceUUID: record.interfaceUUID,
+					version:       version,
+					bindings:      make(map[string]struct{}),
+					objectUUIDs:   make(map[string]struct{}),
+					annotations:   make(map[string]struct{}),
+				}
+				accumulators[key] = acc
+			}
+
+			if record.binding != "" {
+				acc.bindings[record.binding] = struct{}{}
+			}
+			if record.objectUUID != "" {
+				acc.objectUUIDs[record.objectUUID] = struct{}{}
+			}
+			if record.annotation != "" {
+				acc.annotations[record.annotation] = struct{}{}
+			}
+			continue
 		}
-		if normalized[i].Binding != normalized[j].Binding {
-			return normalized[i].Binding < normalized[j].Binding
+
+		if record.objectUUID != "" || record.binding != "" || record.annotation != "" {
+			item := EPMUnresolved{
+				ObjectUUID: record.objectUUID,
+				Binding:    record.binding,
+				Annotation: record.annotation,
+			}
+			key := unresolvedKey{
+				objectUUID: item.ObjectUUID,
+				binding:    item.Binding,
+				annotation: item.Annotation,
+			}
+			if _, exists := unresolvedSet[key]; !exists {
+				unresolvedSet[key] = struct{}{}
+				unresolved = append(unresolved, item)
+			}
 		}
-		return normalized[i].Annotation < normalized[j].Annotation
+	}
+
+	interfaces := make([]EPMInterface, 0, len(accumulators))
+	for _, acc := range accumulators {
+		interfaces = append(interfaces, EPMInterface{
+			InterfaceUUID: acc.interfaceUUID,
+			Version:       acc.version,
+			Bindings:      mapKeysSorted(acc.bindings),
+			ObjectUUIDs:   mapKeysSorted(acc.objectUUIDs),
+			Annotations:   mapKeysSorted(acc.annotations),
+		})
+	}
+
+	sort.Slice(interfaces, func(i, j int) bool {
+		if interfaces[i].InterfaceUUID != interfaces[j].InterfaceUUID {
+			return interfaces[i].InterfaceUUID < interfaces[j].InterfaceUUID
+		}
+		return interfaces[i].Version < interfaces[j].Version
 	})
-	return normalized
+
+	sort.Slice(unresolved, func(i, j int) bool {
+		if unresolved[i].ObjectUUID != unresolved[j].ObjectUUID {
+			return unresolved[i].ObjectUUID < unresolved[j].ObjectUUID
+		}
+		if unresolved[i].Binding != unresolved[j].Binding {
+			return unresolved[i].Binding < unresolved[j].Binding
+		}
+		return unresolved[i].Annotation < unresolved[j].Annotation
+	})
+
+	return interfaces, unresolved
 }
 
-func normalizeEndpointFields(ep EPMEndpoint) EPMEndpoint {
-	ep.UUID = strings.ToLower(strings.TrimSpace(ep.UUID))
-	ep.Version = strings.TrimSpace(ep.Version)
-	ep.Binding = strings.TrimSpace(ep.Binding)
-	ep.Annotation = sanitizeAnnotation([]byte(ep.Annotation))
-	return ep
+func normalizeParsedRecord(record epmParsedRecord) epmParsedRecord {
+	record.objectUUID = strings.ToLower(strings.TrimSpace(record.objectUUID))
+	record.interfaceUUID = strings.ToLower(strings.TrimSpace(record.interfaceUUID))
+	record.binding = strings.TrimSpace(record.binding)
+	record.annotation = sanitizeAnnotation([]byte(record.annotation))
+	return record
 }
 
-func endpointMergeKey(ep EPMEndpoint) string {
-	key := ep.UUID + "|" + ep.Binding
-	if key == "|" {
-		key = ep.UUID + "|" + ep.Annotation
-	}
-	return key
+func formatEPMVersion(major, minor uint16) string {
+	return fmt.Sprintf("v%d.%d", major, minor)
 }
 
-func mergeEndpointVariants(current EPMEndpoint, candidate EPMEndpoint) EPMEndpoint {
-	if current.Version == "" && candidate.Version != "" {
-		current.Version = candidate.Version
+func mapKeysSorted(source map[string]struct{}) []string {
+	if len(source) == 0 {
+		return nil
 	}
-	if annotationScore(candidate.Annotation) > annotationScore(current.Annotation) {
-		current.Annotation = candidate.Annotation
+	out := make([]string, 0, len(source))
+	for key := range source {
+		if key == "" {
+			continue
+		}
+		out = append(out, key)
 	}
-	if current.UUID == "" && candidate.UUID != "" {
-		current.UUID = candidate.UUID
-	}
-	if current.Binding == "" && candidate.Binding != "" {
-		current.Binding = candidate.Binding
-	}
-	return current
-}
-
-// annotationScore picks the most informative annotation among duplicates.
-func annotationScore(s string) int {
-	if s == "" {
-		return 0
-	}
-	score := len(s)
-	switch {
-	case strings.HasPrefix(s, "LRPC-"):
-		score += 20
-	case strings.HasPrefix(s, "OLE"):
-		score += 15
-	case strings.HasPrefix(s, "WMsgKRpc"):
-		score += 15
-	case strings.HasPrefix(s, "SPPCTransportEndpoint-"):
-		score += 15
-	}
-	if hasDigit(s) && !strings.HasPrefix(s, "LRPC-") && !strings.HasPrefix(s, "OLE") && !strings.HasPrefix(s, "WMsgKRpc") {
-		score -= 8
-	}
-	return score
+	sort.Strings(out)
+	return out
 }
 
 // isASCIIPrint checks if a byte is printable ASCII.
