@@ -71,15 +71,18 @@ type parsedTower struct {
 
 // NTLMChallenge contains parsed NTLM challenge metadata when available.
 type NTLMChallenge struct {
-	TargetName      string `json:"target_name,omitempty"`
-	NetBIOSComputer string `json:"netbios_computer,omitempty"`
-	NetBIOSDomain   string `json:"netbios_domain,omitempty"`
-	DNSComputer     string `json:"dns_computer,omitempty"`
-	DNSDomain       string `json:"dns_domain,omitempty"`
-	DNSTree         string `json:"dns_tree,omitempty"`
-	TargetSPN       string `json:"target_spn,omitempty"`
-	SystemTime      string `json:"system_time,omitempty"`
-	ProductVersion  string `json:"product_version,omitempty"`
+	TargetName      string   `json:"target_name,omitempty"`
+	NetBIOSComputer string   `json:"netbios_computer,omitempty"`
+	NetBIOSDomain   string   `json:"netbios_domain,omitempty"`
+	DNSComputer     string   `json:"dns_computer,omitempty"`
+	DNSDomain       string   `json:"dns_domain,omitempty"`
+	DNSTree         string   `json:"dns_tree,omitempty"`
+	TargetSPN       string   `json:"target_spn,omitempty"`
+	SystemTime      string   `json:"system_time,omitempty"`
+	BuildVersion    string   `json:"build_version,omitempty"`
+	NTLMRevision    uint8    `json:"ntlm_revision,omitempty"`
+	WindowsFamily   string   `json:"windows_family,omitempty"`
+	CandidateCPEs   []string `json:"candidate_cpes,omitempty"`
 }
 
 // ResponsePDU describes the RPC PDU received during bind.
