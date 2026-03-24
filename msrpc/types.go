@@ -113,6 +113,9 @@ type BindResult struct {
 type EPMInterface struct {
 	InterfaceUUID string   `json:"interface_uuid,omitempty"`
 	Version       string   `json:"version,omitempty"`
+	Name          string   `json:"name,omitempty"`
+	Protocol      string   `json:"protocol,omitempty"`
+	Provider      string   `json:"provider,omitempty"`
 	Bindings      []string `json:"bindings,omitempty"`
 	ObjectUUIDs   []string `json:"object_uuids,omitempty"`
 	Annotations   []string `json:"annotations,omitempty"`

@@ -2,11 +2,14 @@ package msrpc
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"net"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/zmap/zgrab2"
 )
@@ -64,6 +67,21 @@ type epmParsedRecord struct {
 	binding       string
 	annotation    string
 }
+
+type epmLookupEntry struct {
+	Name     string `json:"name"`
+	Protocol string `json:"protocol"`
+	Provider string `json:"provider"`
+}
+
+var (
+	//go:embed data/full_db.json
+	epmLookupJSON []byte
+
+	epmLookup     map[string]epmLookupEntry
+	epmLookupErr  error
+	epmLookupOnce sync.Once
+)
 
 type ndrCursor struct {
 	buf []byte
@@ -193,6 +211,7 @@ func (s *Scanner) performEPMLookup(conn net.Conn, target zgrab2.ScanTarget) (*EP
 	}
 
 	interfaces, unresolved := aggregateEPMRecords(records)
+	interfaces = enrichEPM(interfaces)
 	result.Interfaces = interfaces
 	result.Unresolved = unresolved
 	result.Success = hadResponse
@@ -836,6 +855,64 @@ func aggregateEPMRecords(input []epmParsedRecord) ([]EPMInterface, []EPMUnresolv
 	})
 
 	return interfaces, unresolved
+}
+
+func enrichEPM(input []EPMInterface) []EPMInterface {
+	if len(input) == 0 {
+		return input
+	}
+
+	lookup, err := loadEPMLookup()
+	if err != nil || len(lookup) == 0 {
+		return input
+	}
+
+	for i := range input {
+		interfaceUUID := strings.ToLower(strings.TrimSpace(input[i].InterfaceUUID))
+		if interfaceUUID == "" {
+			continue
+		}
+
+		entry, found := lookup[interfaceUUID]
+		if !found {
+			continue
+		}
+
+		if entry.Name != "" {
+			input[i].Name = entry.Name
+		}
+		if entry.Protocol != "" {
+			input[i].Protocol = entry.Protocol
+		}
+		if entry.Provider != "" {
+			input[i].Provider = entry.Provider
+		}
+	}
+
+	return input
+}
+
+func loadEPMLookup() (map[string]epmLookupEntry, error) {
+	epmLookupOnce.Do(func() {
+		raw := make(map[string]epmLookupEntry)
+		if err := json.Unmarshal(epmLookupJSON, &raw); err != nil {
+			epmLookupErr = err
+			return
+		}
+
+		normalized := make(map[string]epmLookupEntry, len(raw))
+		for interfaceUUID, entry := range raw {
+			key := strings.ToLower(strings.TrimSpace(interfaceUUID))
+			if key == "" {
+				continue
+			}
+			normalized[key] = entry
+		}
+
+		epmLookup = normalized
+	})
+
+	return epmLookup, epmLookupErr
 }
 
 func normalizeParsedRecord(record epmParsedRecord) epmParsedRecord {
