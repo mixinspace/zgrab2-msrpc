@@ -25,6 +25,7 @@ const (
 	epmLookupHeaderMinSize = ndrUint32Size + epmEntryHandleSize + ndrUint32Size + 8
 	epmEntryFixedSize      = 28
 	epmMaxActualCount      = 10000
+	epmNullUUID            = "00000000-0000-0000-0000-000000000000"
 
 	towerMinFloorCount    = 3
 	towerMaxFloorCount    = 10
@@ -172,10 +173,11 @@ func (s *Scanner) performEPMLookup(conn net.Conn, target zgrab2.ScanTarget) (*EP
 
 	for page := 0; page < maxEPMPages; page++ {
 		requestStub := buildEptLookupStub(entryHandle, uint32(s.config.MaxEntries))
-		requestPDU := buildRequestPDU(callID, 0, 2, requestStub)
+		requestCallID := callID
+		requestPDU := buildRequestPDU(requestCallID, 0, 2, requestStub)
 		callID++
 
-		pdu, err := s.sendAndRecvRPC(conn, requestPDU)
+		pdu, err := s.sendAndRecvRPC(conn, requestPDU, requestCallID)
 		if err != nil {
 			return result, err
 		}
@@ -233,12 +235,23 @@ func validateEPMLookupResponsePDU(pdu *rpcPDU) error {
 	return nil
 }
 
+func readEPMEntryHandle(cursor *ndrCursor) ([epmEntryHandleSize]byte, bool) {
+	var handle [epmEntryHandleSize]byte
+
+	handleBytes, ok := cursor.ReadBytes(epmEntryHandleSize)
+	if !ok {
+		return handle, false
+	}
+
+	copy(handle[:], handleBytes)
+	return handle, true
+}
+
 func updateEntryHandleFromStub(stub []byte, entryHandle *[epmEntryHandleSize]byte) {
 	cursor := newNDRCursor(stub, 0)
-	_, _ = cursor.ReadUint32() // max_count
-	handleBytes, ok := cursor.ReadBytes(epmEntryHandleSize)
+	handle, ok := readEPMEntryHandle(cursor)
 	if ok {
-		copy(entryHandle[:], handleBytes)
+		*entryHandle = handle
 	}
 }
 
@@ -264,7 +277,8 @@ func buildFallbackRecords(stub []byte, fallbackHost string) []epmParsedRecord {
 
 // parseEPMEntries decodes the NDR body returned by ept_lookup.
 // Structure (simplified):
-//   - max_count + next_entry_handle
+//   - next_entry_handle
+//   - count fields for the entry array
 //   - entries array with object UUID / annotation / tower reference
 //   - concatenated tower blobs
 func parseEPMEntries(stub []byte, fallbackHost string) ([]epmParsedRecord, [epmEntryHandleSize]byte, error) {
@@ -293,12 +307,12 @@ func parseEPMHeader(cursor *ndrCursor, nextHandle *[epmEntryHandleSize]byte) (in
 		return 0, fmt.Errorf("short epm stub")
 	}
 
-	maxCountRaw, ok := cursor.ReadUint32()
+	handleBytes, ok := readEPMEntryHandle(cursor)
 	if !ok {
 		return 0, fmt.Errorf("short epm stub")
 	}
 
-	handleBytes, ok := cursor.ReadBytes(epmEntryHandleSize)
+	maxCountRaw, ok := cursor.ReadUint32()
 	if !ok {
 		return 0, fmt.Errorf("short epm stub")
 	}
@@ -318,7 +332,7 @@ func parseEPMHeader(cursor *ndrCursor, nextHandle *[epmEntryHandleSize]byte) (in
 		return 0, fmt.Errorf("short epm stub")
 	}
 
-	copy(nextHandle[:], handleBytes)
+	*nextHandle = handleBytes
 	maxCount := int(maxCountRaw)
 	entryCount := int(entryCountRaw)
 	actualCount := int(actualCountRaw)
@@ -917,6 +931,9 @@ func loadEPMLookup() (map[string]epmLookupEntry, error) {
 
 func normalizeParsedRecord(record epmParsedRecord) epmParsedRecord {
 	record.objectUUID = strings.ToLower(strings.TrimSpace(record.objectUUID))
+	if record.objectUUID == epmNullUUID {
+		record.objectUUID = ""
+	}
 	record.interfaceUUID = strings.ToLower(strings.TrimSpace(record.interfaceUUID))
 	record.binding = strings.TrimSpace(record.binding)
 	record.annotation = sanitizeAnnotation([]byte(record.annotation))

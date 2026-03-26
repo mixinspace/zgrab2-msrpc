@@ -19,7 +19,7 @@ func (s *Scanner) performBind(conn net.Conn, ifaceUUID string, versMajor, versMi
 	if err != nil {
 		return &BindResult{Error: err.Error()}, nil, err
 	}
-	pdu, err := s.sendAndRecvRPC(conn, req)
+	pdu, err := s.sendAndRecvRPC(conn, req, callID)
 	if err != nil {
 		return &BindResult{Error: err.Error()}, nil, err
 	}
@@ -128,32 +128,35 @@ func rpcFaultStatusName(status uint32) string {
 	}
 }
 
-// sendAndRecvRPC writes one RPC PDU and reads one RPC PDU using module read/write timeouts.
-func (s *Scanner) sendAndRecvRPC(conn net.Conn, request []byte) (*rpcPDU, error) {
+// sendAndRecvRPC writes one RPC request and reads one full RPC response message.
+// Fragmented responses are reassembled before the result is returned to callers.
+func (s *Scanner) sendAndRecvRPC(conn net.Conn, request []byte, expectedCallID uint32) (*rpcPDU, error) {
 	timeout := time.Duration(s.config.ReadTimeout) * time.Millisecond
 	conn.SetWriteDeadline(time.Now().Add(timeout))
 	if _, err := conn.Write(request); err != nil {
 		return nil, err
 	}
 	conn.SetReadDeadline(time.Now().Add(timeout))
-	return readRPCPDU(conn, s.config.MaxReadSize*1024)
+	return readRPCMsg(conn, s.config.MaxReadSize*1024, expectedCallID)
 }
 
-// readRPCPDU reads a single connection-oriented DCE/RPC fragment.
-// This scanner sends FIRST|LAST PDUs, so one fragment normally equals one complete message.
-// maxBytes is an upper bound on the fragment length (including 16-byte header).
-func readRPCPDU(conn net.Conn, maxBytes int) (*rpcPDU, error) {
+// readRPCFrag reads a single connection-oriented DCE/RPC fragment.
+// maxBytes is an upper bound on one fragment length, including the 16-byte header.
+func readRPCFrag(conn net.Conn, maxBytes int) (*rpcPDU, error) {
 	header := make([]byte, 16)
 	if _, err := io.ReadFull(conn, header); err != nil {
 		return nil, err
 	}
+
 	fragLen := int(binary.LittleEndian.Uint16(header[8:10]))
 	if fragLen < 16 {
 		return nil, fmt.Errorf("invalid fragment length: %d", fragLen)
 	}
+
 	if fragLen > maxBytes {
 		return nil, fmt.Errorf("fragment length %d exceeds limit %d", fragLen, maxBytes)
 	}
+
 	bodyLen := fragLen - 16
 	body := make([]byte, bodyLen)
 	if bodyLen > 0 {
@@ -161,6 +164,7 @@ func readRPCPDU(conn net.Conn, maxBytes int) (*rpcPDU, error) {
 			return nil, err
 		}
 	}
+
 	raw := append(header, body...)
 	return &rpcPDU{
 		Version: header[0],
@@ -174,6 +178,105 @@ func readRPCPDU(conn net.Conn, maxBytes int) (*rpcPDU, error) {
 		Raw:     raw,
 	}, nil
 }
+
+// readRPCMsg reads one full connection-oriented DCE/RPC response message.
+// It reassembles all fragments for the expected call_id and returns a single rpcPDU.
+func readRPCMsg(conn net.Conn, maxBytes int, expectedCallID uint32) (*rpcPDU, error) {
+	first, err := readRPCFrag(conn, maxBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	if first.Flags & rpcFlagFirstFrag == 0 {
+		return nil, fmt.Errorf("unexpected non-first RPC fragment")
+	}
+
+	if first.CallID != expectedCallID {
+		return nil, fmt.Errorf("unexpected RPC call_id: got %d want %d", first.CallID, expectedCallID)
+	}
+
+	if len(first.Raw) > maxBytes {
+		return nil, fmt.Errorf("rpc message length %d exceeds limit %d", len(first.Raw), maxBytes)
+	}
+
+	if first.Flags & rpcFlagLastFrag != 0 {
+		return first, nil
+	}
+
+	body := append([]byte(nil), first.Body...)
+	raw := append([]byte(nil), first.Raw...)
+	flags := first.Flags
+	authLen := first.AuthLen
+
+	for {
+		fragment, err := readRPCFrag(conn, maxBytes)
+		if err != nil {
+			return nil, err
+		}
+
+		if fragment.CallID != expectedCallID {
+			return nil, fmt.Errorf("unexpected RPC call_id: got %d want %d", fragment.CallID, expectedCallID)
+		}
+
+		if fragment.Type != first.Type {
+			return nil, fmt.Errorf("unexpected RPC fragment type: got %d want %d", fragment.Type, first.Type)
+		}
+
+		if fragment.Version != first.Version || fragment.Minor != first.Minor {
+			return nil, fmt.Errorf(
+				"unexpected RPC fragment version: got %d.%d want %d.%d",
+				fragment.Version, fragment.Minor, first.Version, first.Minor,
+			)
+		}
+
+		if fragment.Flags & rpcFlagFirstFrag != 0 {
+			return nil, fmt.Errorf("unexpected first-flag on later RPC fragment")
+		}
+
+		if len(raw)+len(fragment.Raw) > maxBytes {
+			return nil, fmt.Errorf("rpc message length %d exceeds limit %d", len(raw)+len(fragment.Raw), maxBytes)
+		}
+
+
+		continuationBody, err := rpcContinuationBody(fragment)
+		if err != nil {
+			return nil, err
+		}
+
+		body = append(body, continuationBody...)
+		raw = append(raw, fragment.Raw...)
+		flags |= fragment.Flags
+		authLen = fragment.AuthLen
+
+		if fragment.Flags & rpcFlagLastFrag != 0 {
+			break
+		}
+	}
+
+	first.Flags = flags
+	first.AuthLen = authLen
+	first.Body = body
+	first.Raw = raw
+	return first, nil
+}
+
+func rpcContinuationBody(fragment *rpcPDU) ([]byte, error) {
+	if fragment.Type != rpcPTYPEResponse && fragment.Type != rpcPTYPEFault {
+		return fragment.Body, nil
+	}
+	if len(fragment.Body) < 8 {
+		return nil, fmt.Errorf("short continued RPC body")
+	}
+	return fragment.Body[8:], nil // cuz its fragment of same callid we should cut tech info from start
+								  // then glue it for full mesg
+/*
+alloc_hint 4 byte
+context_id 2 byte
+cancel_count + padding 2 byte
+8 at all
+*/
+
+								}
 
 // buildRPCHeader encodes the fixed 16-byte connection-oriented RPC header:
 // version, ptype, flags, data representation, frag_len, auth_len, call_id.

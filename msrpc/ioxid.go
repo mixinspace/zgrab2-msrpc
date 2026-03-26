@@ -23,8 +23,9 @@ func (s *Scanner) performIOXIDLookupConn(conn net.Conn) (*IOXIDResult, *BindResu
 		return ret, bind, fmt.Errorf("iobjectexporter bind failed")
 	}
 
-	req := buildRequestPDU(bindCallID+1, 0, 5, nil)
-	pdu, err := s.sendAndRecvRPC(conn, req)
+	requestCallID := bindCallID + 1
+	req := buildRequestPDU(requestCallID, 0, 5, nil)
+	pdu, err := s.sendAndRecvRPC(conn, req, requestCallID)
 	if err != nil {
 		return ret, bind, err
 	}
