@@ -12,6 +12,27 @@ import (
 	"time"
 )
 
+const (
+	rpcU16Size = 2
+	rpcU32Size = 4
+	rpcAlign4  = 4
+
+	rpcHdrSize        = 16
+	rpcRespPrefixSize = rpcU32Size + rpcU16Size + rpcU16Size
+
+	rpcFaultStatusPos = rpcRespPrefixSize
+	rpcFaultStatusEnd = rpcFaultStatusPos + rpcU32Size
+
+	rpcBindAckMinSize        = 10
+	rpcBindAckAssocPos       = 4
+	rpcBindAckAssocEnd       = rpcBindAckAssocPos + rpcU32Size
+	rpcBindAckSecAddrPos     = 10
+	rpcBindAckSecAddrLenPos  = 8
+	rpcBindAckSecAddrLenEnd  = rpcBindAckSecAddrLenPos + rpcU16Size
+	rpcBindAckResultsHdrSize = 4
+	rpcBindAckResultSize     = 24
+)
+
 // performBind sends a connection-oriented DCE/RPC BIND PDU and parses the BIND_ACK/BIND_NAK.
 // It also extracts optional NTLM challenge metadata from the auth trailer when present.
 func (s *Scanner) performBind(conn net.Conn, ifaceUUID string, versMajor, versMinor uint16, callID uint32, ntlmToken []byte) (*BindResult, *rpcMessage, error) {
@@ -19,6 +40,7 @@ func (s *Scanner) performBind(conn net.Conn, ifaceUUID string, versMajor, versMi
 	if err != nil {
 		return &BindResult{Error: err.Error()}, nil, err
 	}
+
 	pdu, err := s.sendAndRecvRPC(conn, req, callID)
 	if err != nil {
 		return &BindResult{Error: err.Error()}, nil, err
@@ -30,50 +52,28 @@ func (s *Scanner) performBind(conn net.Conn, ifaceUUID string, versMajor, versMi
 			Name: rpcPacketTypeName(pdu.Type),
 		},
 	}
+
 	if pdu.Type == rpcPTYPEBindNak {
 		res.Error = "bind nack"
 		return res, pdu, fmt.Errorf("received bind_nak")
 	}
+
 	if pdu.Type != rpcPTYPEBindAck {
 		res.Error = fmt.Sprintf("unexpected packet type %d", pdu.Type)
 		return res, pdu, fmt.Errorf(res.Error)
 	}
-	if len(pdu.Body) < 10 {
-		res.Error = "short bind_ack body"
-		return res, pdu, fmt.Errorf(res.Error)
-	}
 
-	// BIND_ACK layout starts with max fragments, association group, then secondary address.
-	res.AssociationGroupID = binary.LittleEndian.Uint32(pdu.Body[4:8])
-	secAddrLen := int(binary.LittleEndian.Uint16(pdu.Body[8:10]))
-	if secAddrLen > 0 && 10+secAddrLen <= len(pdu.Body) {
-		raw := strings.TrimRight(string(pdu.Body[10:10+secAddrLen]), "\x00")
-		ep := &SecondaryEndpoint{Raw: raw}
-		if port, convErr := strconv.Atoi(raw); convErr == nil && port >= 0 && port <= 65535 {
-			ep.Port = uint16(port)
-		}
-		res.SecondaryEndpoint = ep
-	}
-	pos := 10 + secAddrLen
-	pos += (4 - (pos % 4)) % 4
-	accepted := true
-	if pos+4 <= len(pdu.Body) {
-		// p_result_list_t: one result per presentation context we proposed in the BIND.
-		numResults := int(pdu.Body[pos])
-		pos += 4
-		if numResults > 0 && pos+24 <= len(pdu.Body) {
-			res.ContextResult = binary.LittleEndian.Uint16(pdu.Body[pos : pos+2])
-			res.ContextReason = binary.LittleEndian.Uint16(pdu.Body[pos+2 : pos+4])
-			if res.ContextResult != 0 {
-				accepted = false
-			}
-		}
+	accepted, err := parseBindAckBody(pdu.Body, res)
+	if err != nil {
+		res.Error = err.Error()
+		return res, pdu, err
 	}
 
 	if pdu.AuthLen > 0 || len(ntlmToken) > 0 {
 		ch, _ := parseNTLMChallengeFromPDU(pdu.Wire)
 		res.NTLMChallenge = ch
 	}
+
 	res.Accepted = accepted
 	if !accepted {
 		if res.Error == "" {
@@ -81,7 +81,71 @@ func (s *Scanner) performBind(conn net.Conn, ifaceUUID string, versMajor, versMi
 		}
 		return res, pdu, fmt.Errorf(res.Error)
 	}
+
 	return res, pdu, nil
+}
+
+func parseBindAckBody(body []byte, res *BindResult) (bool, error) {
+	if len(body) < rpcBindAckMinSize {
+		return false, fmt.Errorf("short bind_ack body")
+	}
+
+	res.AssociationGroupID = binary.LittleEndian.Uint32(body[rpcBindAckAssocPos:rpcBindAckAssocEnd])
+
+	secAddrLen := readBindAckSecAddrLen(body)
+	res.SecondaryEndpoint = parseBindAckSecondaryEndpoint(body, secAddrLen)
+
+	return parseBindAckContextResult(body, secAddrLen, res), nil
+}
+
+func readBindAckSecAddrLen(body []byte) int {
+	return int(binary.LittleEndian.Uint16(body[rpcBindAckSecAddrLenPos:rpcBindAckSecAddrLenEnd]))
+}
+
+func parseBindAckSecondaryEndpoint(body []byte, secAddrLen int) *SecondaryEndpoint {
+	if secAddrLen <= 0 {
+		return nil
+	}
+
+	secAddrStart := rpcBindAckSecAddrPos
+	secAddrEnd := secAddrStart + secAddrLen
+	if secAddrEnd > len(body) {
+		return nil
+	}
+
+	raw := strings.TrimRight(string(body[secAddrStart:secAddrEnd]), "\x00")
+	ep := &SecondaryEndpoint{Raw: raw}
+	if port, convErr := strconv.Atoi(raw); convErr == nil && port >= 0 && port <= 65535 {
+		ep.Port = uint16(port)
+	}
+	
+	return ep
+}
+
+func parseBindAckContextResult(body []byte, secAddrLen int, res *BindResult) bool {
+	resultsPos := alignRPCPos(rpcBindAckSecAddrPos + secAddrLen)
+	if resultsPos+rpcBindAckResultsHdrSize > len(body) {
+		return true
+	}
+
+	// p_result_list_t: one result per presentation context we proposed in the BIND.
+	numResults := int(body[resultsPos])
+	if numResults == 0 {
+		return true
+	}
+
+	firstResultPos := resultsPos + rpcBindAckResultsHdrSize
+	if firstResultPos+rpcBindAckResultSize > len(body) {
+		return true
+	}
+
+	res.ContextResult = binary.LittleEndian.Uint16(body[firstResultPos : firstResultPos+rpcU16Size])
+	res.ContextReason = binary.LittleEndian.Uint16(body[firstResultPos+rpcU16Size : firstResultPos+rpcU16Size*2])
+	return res.ContextResult == 0
+}
+
+func alignRPCPos(pos int) int {
+	return pos + (rpcAlign4-(pos%rpcAlign4))%rpcAlign4
 }
 
 // rpcPacketTypeName returns a human-readable DCE/RPC PTYPE name.
@@ -106,10 +170,10 @@ func rpcPacketTypeName(ptype uint8) string {
 
 func parseRPCFaultStatus(body []byte) (uint32, bool) {
 	// Fault PDU body (connection-oriented) encodes status at offset 8.
-	if len(body) < 12 {
+	if len(body) < rpcFaultStatusEnd {
 		return 0, false
 	}
-	return binary.LittleEndian.Uint32(body[8:12]), true
+	return binary.LittleEndian.Uint32(body[rpcFaultStatusPos:rpcFaultStatusEnd]), true
 }
 
 // rpcFaultStatusName maps frequently observed RPC fault status values to canonical names.
@@ -136,6 +200,7 @@ func (s *Scanner) sendAndRecvRPC(conn net.Conn, request []byte, expectedCallID u
 	if _, err := conn.Write(request); err != nil {
 		return nil, err
 	}
+
 	conn.SetReadDeadline(time.Now().Add(timeout))
 	return readRPCMsg(conn, s.config.MaxReadSize*1024, expectedCallID)
 }
@@ -143,13 +208,13 @@ func (s *Scanner) sendAndRecvRPC(conn net.Conn, request []byte, expectedCallID u
 // readRPCFrag reads a single connection-oriented DCE/RPC fragment.
 // maxBytes is an upper bound on one fragment length, including the 16-byte header.
 func readRPCFrag(conn net.Conn, maxBytes int) (*rpcFragment, error) {
-	header := make([]byte, 16)
+	header := make([]byte, rpcHdrSize)
 	if _, err := io.ReadFull(conn, header); err != nil {
 		return nil, err
 	}
 
 	fragLen := int(binary.LittleEndian.Uint16(header[8:10]))
-	if fragLen < 16 {
+	if fragLen < rpcHdrSize {
 		return nil, fmt.Errorf("invalid fragment length: %d", fragLen)
 	}
 
@@ -157,7 +222,7 @@ func readRPCFrag(conn net.Conn, maxBytes int) (*rpcFragment, error) {
 		return nil, fmt.Errorf("fragment length %d exceeds limit %d", fragLen, maxBytes)
 	}
 
-	bodyLen := fragLen - 16
+	bodyLen := fragLen - rpcHdrSize
 	body := make([]byte, bodyLen)
 	if bodyLen > 0 {
 		if _, err := io.ReadFull(conn, body); err != nil {
@@ -281,11 +346,15 @@ func rpcContinuationBody(fragment *rpcFragment) ([]byte, error) {
 	if fragment.Type != rpcPTYPEResponse && fragment.Type != rpcPTYPEFault {
 		return fragment.Body, nil
 	}
-	if len(fragment.Body) < 8 {
+
+	if len(fragment.Body) < rpcRespPrefixSize {
 		return nil, fmt.Errorf("short continued RPC body")
 	}
-	return fragment.Body[8:], nil // cuz its fragment of same callid we should cut tech info from start
+
+	return fragment.Body[rpcRespPrefixSize:], nil
+	// cuz its fragment of same callid we should cut tech info from start
 	// then glue it for full mesg
+	
 	/*
 	   alloc_hint 4 byte
 	   context_id 2 byte
@@ -298,7 +367,7 @@ func rpcContinuationBody(fragment *rpcFragment) ([]byte, error) {
 // buildRPCHeader encodes the fixed 16-byte connection-oriented RPC header:
 // version, ptype, flags, data representation, frag_len, auth_len, call_id.
 func buildRPCHeader(ptype uint8, callID uint32, bodyLen int, authLen uint16) []byte {
-	h := make([]byte, 16)
+	h := make([]byte, rpcHdrSize)
 	h[0] = rpcVersionMajor
 	h[1] = rpcVersionMinor
 	h[2] = ptype
@@ -307,7 +376,7 @@ func buildRPCHeader(ptype uint8, callID uint32, bodyLen int, authLen uint16) []b
 	h[5] = 0x00
 	h[6] = 0x00
 	h[7] = 0x00
-	binary.LittleEndian.PutUint16(h[8:10], uint16(16+bodyLen))
+	binary.LittleEndian.PutUint16(h[8:10], uint16(rpcHdrSize+bodyLen))
 	binary.LittleEndian.PutUint16(h[10:12], authLen)
 	binary.LittleEndian.PutUint32(h[12:16], callID)
 	return h
@@ -321,6 +390,7 @@ func buildBindPDU(ifaceUUID string, ifaceMajor, ifaceMinor uint16, callID uint32
 	if err != nil {
 		return nil, err
 	}
+
 	transfer, err := uuidStringToRPCBytes(uuidNDRTransferSyntax)
 	if err != nil {
 		return nil, err
@@ -352,6 +422,7 @@ func buildBindPDU(ifaceUUID string, ifaceMajor, ifaceMinor uint16, callID uint32
 		if padLen > 0 {
 			body.Write(make([]byte, padLen))
 		}
+
 		secTrailer := []byte{
 			rpcAuthTypeNTLM,
 			rpcAuthLevelConn,
@@ -381,26 +452,13 @@ func buildRequestPDU(callID uint32, contextID uint16, opnum uint16, stub []byte)
 	return append(header, body.Bytes()...)
 }
 
-// buildEptLookupStub builds parameters for ept_lookup:
-// inquiry_type=0, object=nil, interface_id=nil, vers_option=1, entry_handle, max_ents.
-func buildEptLookupStub(entryHandle [20]byte, maxEnts uint32) []byte {
-	body := &bytes.Buffer{}
-	_ = binary.Write(body, binary.LittleEndian, uint32(0))
-	_ = binary.Write(body, binary.LittleEndian, uint32(0))
-	_ = binary.Write(body, binary.LittleEndian, uint32(0))
-	_ = binary.Write(body, binary.LittleEndian, uint32(1))
-	body.Write(entryHandle[:])
-	_ = binary.Write(body, binary.LittleEndian, maxEnts)
-	return body.Bytes()
-}
-
 // parseResponseStub strips the 8-byte RESPONSE header prefix
 // (alloc_hint + context_id + cancel_count/opnum padding) and returns the NDR stub payload.
 func parseResponseStub(body []byte) ([]byte, error) {
-	if len(body) < 8 {
+	if len(body) < rpcRespPrefixSize {
 		return nil, fmt.Errorf("short response body")
 	}
-	return body[8:], nil
+	return body[rpcRespPrefixSize:], nil
 }
 
 // uuidStringToRPCBytes converts a canonical UUID string to RPC wire byte order

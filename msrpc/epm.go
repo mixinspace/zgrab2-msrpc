@@ -235,6 +235,19 @@ func validateEPMLookupResponsePDU(pdu *rpcMessage) error {
 	return nil
 }
 
+// buildEptLookupStub builds parameters for ept_lookup:
+// inquiry_type=0, object=nil, interface_id=nil, vers_option=1, entry_handle, max_ents.
+func buildEptLookupStub(entryHandle [epmEntryHandleSize]byte, maxEnts uint32) []byte {
+	body := &bytes.Buffer{}
+	_ = binary.Write(body, binary.LittleEndian, uint32(0))
+	_ = binary.Write(body, binary.LittleEndian, uint32(0))
+	_ = binary.Write(body, binary.LittleEndian, uint32(0))
+	_ = binary.Write(body, binary.LittleEndian, uint32(1))
+	body.Write(entryHandle[:])
+	_ = binary.Write(body, binary.LittleEndian, maxEnts)
+	return body.Bytes()
+}
+
 func readEPMEntryHandle(cursor *ndrCursor) ([epmEntryHandleSize]byte, bool) {
 	var handle [epmEntryHandleSize]byte
 
