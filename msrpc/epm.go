@@ -222,7 +222,7 @@ func (s *Scanner) performEPMLookup(conn net.Conn, target zgrab2.ScanTarget) (*EP
 	return result, nil
 }
 
-func validateEPMLookupResponsePDU(pdu *rpcPDU) error {
+func validateEPMLookupResponsePDU(pdu *rpcMessage) error {
 	if pdu.Type == rpcPTYPEFault {
 		if status, ok := parseRPCFaultStatus(pdu.Body); ok {
 			return fmt.Errorf("epm request returned fault: %s (0x%08x)", rpcFaultStatusName(status), status)

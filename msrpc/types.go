@@ -43,7 +43,7 @@ var (
 	ipv6Regex = regexp.MustCompile(`\b[0-9a-fA-F:]{2,}\b`)
 )
 
-type rpcPDU struct {
+type rpcFragment struct {
 	Version uint8
 	Minor   uint8
 	Type    uint8
@@ -51,8 +51,20 @@ type rpcPDU struct {
 	FragLen uint16
 	AuthLen uint16
 	CallID  uint32
-	Body    []byte
-	Raw     []byte
+	Body    []byte // without 16 byte rpc header
+	Raw     []byte // full raw fragment
+}
+
+type rpcMessage struct {
+	Version       uint8
+	Minor         uint8
+	Type          uint8
+	Flags         uint8
+	AuthLen       uint16
+	CallID        uint32
+	Body          []byte // take Body from every fragment and clue them
+	Wire          []byte // take Raw from every fragment and clue them
+	FragmentCount int
 }
 
 type towerFloor struct {

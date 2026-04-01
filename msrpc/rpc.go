@@ -14,7 +14,7 @@ import (
 
 // performBind sends a connection-oriented DCE/RPC BIND PDU and parses the BIND_ACK/BIND_NAK.
 // It also extracts optional NTLM challenge metadata from the auth trailer when present.
-func (s *Scanner) performBind(conn net.Conn, ifaceUUID string, versMajor, versMinor uint16, callID uint32, ntlmToken []byte) (*BindResult, *rpcPDU, error) {
+func (s *Scanner) performBind(conn net.Conn, ifaceUUID string, versMajor, versMinor uint16, callID uint32, ntlmToken []byte) (*BindResult, *rpcMessage, error) {
 	req, err := buildBindPDU(ifaceUUID, versMajor, versMinor, callID, ntlmToken)
 	if err != nil {
 		return &BindResult{Error: err.Error()}, nil, err
@@ -71,7 +71,7 @@ func (s *Scanner) performBind(conn net.Conn, ifaceUUID string, versMajor, versMi
 	}
 
 	if pdu.AuthLen > 0 || len(ntlmToken) > 0 {
-		ch, _ := parseNTLMChallengeFromPDU(pdu.Raw)
+		ch, _ := parseNTLMChallengeFromPDU(pdu.Wire)
 		res.NTLMChallenge = ch
 	}
 	res.Accepted = accepted
@@ -130,7 +130,7 @@ func rpcFaultStatusName(status uint32) string {
 
 // sendAndRecvRPC writes one RPC request and reads one full RPC response message.
 // Fragmented responses are reassembled before the result is returned to callers.
-func (s *Scanner) sendAndRecvRPC(conn net.Conn, request []byte, expectedCallID uint32) (*rpcPDU, error) {
+func (s *Scanner) sendAndRecvRPC(conn net.Conn, request []byte, expectedCallID uint32) (*rpcMessage, error) {
 	timeout := time.Duration(s.config.ReadTimeout) * time.Millisecond
 	conn.SetWriteDeadline(time.Now().Add(timeout))
 	if _, err := conn.Write(request); err != nil {
@@ -142,7 +142,7 @@ func (s *Scanner) sendAndRecvRPC(conn net.Conn, request []byte, expectedCallID u
 
 // readRPCFrag reads a single connection-oriented DCE/RPC fragment.
 // maxBytes is an upper bound on one fragment length, including the 16-byte header.
-func readRPCFrag(conn net.Conn, maxBytes int) (*rpcPDU, error) {
+func readRPCFrag(conn net.Conn, maxBytes int) (*rpcFragment, error) {
 	header := make([]byte, 16)
 	if _, err := io.ReadFull(conn, header); err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func readRPCFrag(conn net.Conn, maxBytes int) (*rpcPDU, error) {
 	}
 
 	raw := append(header, body...)
-	return &rpcPDU{
+	return &rpcFragment{
 		Version: header[0],
 		Minor:   header[1],
 		Type:    header[2],
@@ -180,14 +180,14 @@ func readRPCFrag(conn net.Conn, maxBytes int) (*rpcPDU, error) {
 }
 
 // readRPCMsg reads one full connection-oriented DCE/RPC response message.
-// It reassembles all fragments for the expected call_id and returns a single rpcPDU.
-func readRPCMsg(conn net.Conn, maxBytes int, expectedCallID uint32) (*rpcPDU, error) {
+// It reassembles all fragments for the expected call_id and returns one rpcMessage.
+func readRPCMsg(conn net.Conn, maxBytes int, expectedCallID uint32) (*rpcMessage, error) {
 	first, err := readRPCFrag(conn, maxBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	if first.Flags & rpcFlagFirstFrag == 0 {
+	if first.Flags&rpcFlagFirstFrag == 0 {
 		return nil, fmt.Errorf("unexpected non-first RPC fragment")
 	}
 
@@ -199,14 +199,25 @@ func readRPCMsg(conn net.Conn, maxBytes int, expectedCallID uint32) (*rpcPDU, er
 		return nil, fmt.Errorf("rpc message length %d exceeds limit %d", len(first.Raw), maxBytes)
 	}
 
-	if first.Flags & rpcFlagLastFrag != 0 {
-		return first, nil
+	if first.Flags&rpcFlagLastFrag != 0 {
+		return &rpcMessage{
+			Version:       first.Version,
+			Minor:         first.Minor,
+			Type:          first.Type,
+			Flags:         first.Flags,
+			AuthLen:       first.AuthLen,
+			CallID:        first.CallID,
+			Body:          append([]byte(nil), first.Body...),
+			Wire:          append([]byte(nil), first.Raw...),
+			FragmentCount: 1,
+		}, nil
 	}
 
 	body := append([]byte(nil), first.Body...)
 	raw := append([]byte(nil), first.Raw...)
 	flags := first.Flags
 	authLen := first.AuthLen
+	fragmentCount := 1
 
 	for {
 		fragment, err := readRPCFrag(conn, maxBytes)
@@ -229,14 +240,13 @@ func readRPCMsg(conn net.Conn, maxBytes int, expectedCallID uint32) (*rpcPDU, er
 			)
 		}
 
-		if fragment.Flags & rpcFlagFirstFrag != 0 {
+		if fragment.Flags&rpcFlagFirstFrag != 0 {
 			return nil, fmt.Errorf("unexpected first-flag on later RPC fragment")
 		}
 
 		if len(raw)+len(fragment.Raw) > maxBytes {
 			return nil, fmt.Errorf("rpc message length %d exceeds limit %d", len(raw)+len(fragment.Raw), maxBytes)
 		}
-
 
 		continuationBody, err := rpcContinuationBody(fragment)
 		if err != nil {
@@ -247,20 +257,27 @@ func readRPCMsg(conn net.Conn, maxBytes int, expectedCallID uint32) (*rpcPDU, er
 		raw = append(raw, fragment.Raw...)
 		flags |= fragment.Flags
 		authLen = fragment.AuthLen
+		fragmentCount++
 
-		if fragment.Flags & rpcFlagLastFrag != 0 {
+		if fragment.Flags&rpcFlagLastFrag != 0 {
 			break
 		}
 	}
 
-	first.Flags = flags
-	first.AuthLen = authLen
-	first.Body = body
-	first.Raw = raw
-	return first, nil
+	return &rpcMessage{
+		Version:       first.Version,
+		Minor:         first.Minor,
+		Type:          first.Type,
+		Flags:         flags,
+		AuthLen:       authLen,
+		CallID:        first.CallID,
+		Body:          body,
+		Wire:          raw,
+		FragmentCount: fragmentCount,
+	}, nil
 }
 
-func rpcContinuationBody(fragment *rpcPDU) ([]byte, error) {
+func rpcContinuationBody(fragment *rpcFragment) ([]byte, error) {
 	if fragment.Type != rpcPTYPEResponse && fragment.Type != rpcPTYPEFault {
 		return fragment.Body, nil
 	}
@@ -268,15 +285,15 @@ func rpcContinuationBody(fragment *rpcPDU) ([]byte, error) {
 		return nil, fmt.Errorf("short continued RPC body")
 	}
 	return fragment.Body[8:], nil // cuz its fragment of same callid we should cut tech info from start
-								  // then glue it for full mesg
-/*
-alloc_hint 4 byte
-context_id 2 byte
-cancel_count + padding 2 byte
-8 at all
-*/
+	// then glue it for full mesg
+	/*
+	   alloc_hint 4 byte
+	   context_id 2 byte
+	   cancel_count + padding 2 byte
+	   8 at all
+	*/
 
-								}
+}
 
 // buildRPCHeader encodes the fixed 16-byte connection-oriented RPC header:
 // version, ptype, flags, data representation, frag_len, auth_len, call_id.
