@@ -13,15 +13,14 @@ import (
 )
 
 const (
-	msrpcTCPPort  = 135
-	msrpcHTTPPort = 593
+	msrpcTCPPort = 135
 )
 
 // Flags are the command-line flags for the msrpc module.
 type Flags struct {
 	zgrab2.BaseFlags `group:"Basic Options"`
 
-	UseHTTP     bool   `long:"http" description:"Use RPC-over-HTTP mode (ncacn_http); port 135 is rewritten to 593 in this mode"`
+	UseHTTP     bool   `long:"http" description:"Use RPC-over-HTTP mode (ncacn_http) on the selected port"`
 	DoEPM       bool   `long:"epm" description:"Run Endpoint Mapper lookup (TCP and HTTP mode)"`
 	DoIOXID     bool   `long:"ioxid" description:"Run IOXIDResolver ServerAlive2 (TCP and HTTP mode)"`
 	UseNTLM     bool   `long:"ntlm" description:"Include NTLM negotiate auth in bind requests and parse challenge metadata"`
@@ -60,7 +59,7 @@ func (m *Module) NewScanner() zgrab2.Scanner {
 
 // Description returns an overview of this module.
 func (m *Module) Description() string {
-	return "Probe Microsoft RPC over TCP (135) or HTTP (593), including Endpoint Mapper and IOXID metadata"
+	return "Probe Microsoft RPC over the selected port in TCP or HTTP mode, including Endpoint Mapper and IOXID metadata"
 }
 
 // Validate validates the flags.
@@ -91,9 +90,6 @@ func (s *Scanner) Init(flags zgrab2.ScanFlags) error {
 	}
 	if f.MaxEntries > defaultMaxEPMEntries {
 		f.MaxEntries = defaultMaxEPMEntries
-	}
-	if f.UseHTTP && f.Port == msrpcTCPPort {
-		f.Port = msrpcHTTPPort
 	}
 	s.config = f
 	return nil
