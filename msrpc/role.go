@@ -32,6 +32,21 @@ var inferredRoles = []string{
 	roleStandaloneSpecializedHost,
 }
 
+var roleMaxRawScores = map[string]int{
+	roleDomainController:           41,
+	roleMemberServer:               14,
+	roleFileServer:                 11,
+	rolePrintServer:                10,
+	roleRDSTerminalServer:          40,
+	roleManagementServer:           15,
+	roleCOMDCOMApplicationServer:   17,
+	roleRPCOverHTTPPublishedServer: 13,
+	roleInfrastructureServer:       16,
+	roleStandaloneSpecializedHost:  10,
+}
+
+var comparableScoreMaxRaw = maxRoleRawScore()
+
 // RoleCandidate represents one scored role variant.
 type RoleCandidate struct {
 	Role  string `json:"role,omitempty"`
@@ -40,13 +55,14 @@ type RoleCandidate struct {
 
 // ServerRole contains the inferred role and supporting score data.
 type ServerRole struct {
-	Role          string          `json:"role,omitempty"`
-	Confidence    string          `json:"confidence,omitempty"`
-	Score         int             `json:"score,omitempty"`
-	RunnerUp      string          `json:"runner_up,omitempty"`
-	RunnerUpScore int             `json:"runner_up_score,omitempty"`
-	Signals       []string        `json:"signals,omitempty"`
-	Candidates    []RoleCandidate `json:"candidates,omitempty"`
+	Role                 string          `json:"role,omitempty"`
+	RoleConfidence       string          `json:"role_confidence,omitempty"`
+	Score                int             `json:"score,omitempty"`
+	SecondRole           string          `json:"second_role,omitempty"`
+	SecondRoleConfidence string          `json:"second_role_confidence,omitempty"`
+	SecondRoleScore      int             `json:"second_role_score,omitempty"`
+	Signals              []string        `json:"signals,omitempty"`
+	Candidates           []RoleCandidate `json:"candidates,omitempty"`
 }
 
 type roleAccumulator struct {
@@ -408,22 +424,23 @@ func inferServerRole(results *ScanResults) *ServerRole {
 	second := scored[1]
 	if top.score <= 0 {
 		return &ServerRole{
-			Role:       roleUnknown,
-			Confidence: "low",
-			Signals:    []string{"insufficient role-specific MSRPC signals"},
+			Role:           roleUnknown,
+			RoleConfidence: "low",
+			Signals:        []string{"insufficient role-specific MSRPC signals"},
 		}
 	}
 
-	confidence := classifyConfidence(top.role, top.score, second.score)
+	roleConfidence := classifyRoleConfidence(top.role, top.score, second.score)
 	out := &ServerRole{
-		Role:       top.role,
-		Confidence: confidence,
-		Score:      top.score,
-		Signals:    trimSignals(top.signals, 8),
+		Role:           top.role,
+		RoleConfidence: roleConfidence,
+		Score:          normalizeComparableScore(top.score),
+		Signals:        trimSignals(top.signals, 8),
 	}
 	if second.score > 0 {
-		out.RunnerUp = second.role
-		out.RunnerUpScore = second.score
+		out.SecondRole = second.role
+		out.SecondRoleConfidence = classifySecondRoleConfidence(second.role, top.score, second.score)
+		out.SecondRoleScore = normalizeComparableScore(second.score)
 	}
 
 	for _, item := range scored {
@@ -432,7 +449,7 @@ func inferServerRole(results *ScanResults) *ServerRole {
 		}
 		out.Candidates = append(out.Candidates, RoleCandidate{
 			Role:  item.role,
-			Score: item.score,
+			Score: normalizeComparableScore(item.score),
 		})
 	}
 
@@ -649,13 +666,58 @@ func countTrue(values ...bool) int {
 	return total
 }
 
-func classifyConfidence(role string, topScore, secondScore int) string {
+func maxRoleRawScore() int {
+	maxScore := 0
+	for _, role := range inferredRoles {
+		if score := roleMaxRawScores[role]; score > maxScore {
+			maxScore = score
+		}
+	}
+	return maxScore
+}
+
+func normalizeComparableScore(rawScore int) int {
+	if rawScore <= 0 || comparableScoreMaxRaw <= 0 {
+		return 0
+	}
+	percent := (rawScore*100 + comparableScoreMaxRaw/2) / comparableScoreMaxRaw
+	if percent > 100 {
+		return 100
+	}
+	return percent
+}
+
+func classifyRoleConfidence(role string, topScore, secondScore int) string {
 	margin := topScore - secondScore
 	confidence := "low"
 	switch {
 	case topScore >= 8 && margin >= 4:
 		confidence = "high"
 	case topScore >= 5 && margin >= 2:
+		confidence = "medium"
+	}
+
+	switch role {
+	case roleInfrastructureServer, roleMemberServer, roleRPCOverHTTPPublishedServer, roleStandaloneSpecializedHost:
+		if confidence == "high" {
+			return "medium"
+		}
+	}
+
+	return confidence
+}
+
+func classifySecondRoleConfidence(role string, topScore, secondScore int) string {
+	if secondScore <= 0 {
+		return "low"
+	}
+
+	marginToTop := topScore - secondScore
+	confidence := "low"
+	switch {
+	case secondScore >= 8 && marginToTop <= 1:
+		confidence = "high"
+	case secondScore >= 5 && marginToTop <= 4:
 		confidence = "medium"
 	}
 
