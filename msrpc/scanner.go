@@ -12,17 +12,23 @@ import (
 	"github.com/zmap/zgrab2"
 )
 
+const (
+	msrpcTCPPort  = 135
+	msrpcHTTPPort = 593
+)
+
 // Flags are the command-line flags for the msrpc module.
 type Flags struct {
 	zgrab2.BaseFlags `group:"Basic Options"`
 
-	UseHTTP     bool `long:"http" description:"Use RPC-over-HTTP mode (ncacn_http); if port is unchanged, defaults to 593"`
-	DoEPM       bool `long:"epm" description:"Run Endpoint Mapper lookup (TCP and HTTP mode)"`
-	DoIOXID     bool `long:"ioxid" description:"Run IOXIDResolver ServerAlive2 (TCP and HTTP mode)"`
-	UseNTLM     bool `long:"ntlm" description:"Include NTLM negotiate auth in bind requests and parse challenge metadata"`
-	ReadTimeout int  `long:"read-timeout" description:"Read timeout in milliseconds" default:"3000"`
-	MaxReadSize int  `long:"max-read-size" description:"Maximum amount of data to read in KiB (1024 bytes)" default:"1024"`
-	MaxEntries  int  `long:"max-entries" description:"Maximum endpoint entries to request per EPM lookup page" default:"500"`
+	UseHTTP     bool   `long:"http" description:"Use RPC-over-HTTP mode (ncacn_http); port 135 is rewritten to 593 in this mode"`
+	DoEPM       bool   `long:"epm" description:"Run Endpoint Mapper lookup (TCP and HTTP mode)"`
+	DoIOXID     bool   `long:"ioxid" description:"Run IOXIDResolver ServerAlive2 (TCP and HTTP mode)"`
+	UseNTLM     bool   `long:"ntlm" description:"Include NTLM negotiate auth in bind requests and parse challenge metadata"`
+	EPMPolicy   string `long:"epm-policy" description:"EPM enrichment policy: all or verified" default:"all"`
+	ReadTimeout int    `long:"read-timeout" description:"Read timeout in milliseconds" default:"3000"`
+	MaxReadSize int    `long:"max-read-size" description:"Maximum amount of data to read in KiB (1024 bytes)" default:"1024"`
+	MaxEntries  int    `long:"max-entries" description:"Maximum endpoint entries to request per EPM lookup page" default:"500"`
 }
 
 // Module implements the zgrab2.ScanModule interface.
@@ -36,7 +42,7 @@ type Scanner struct {
 // RegisterModule registers the msrpc scan module.
 func RegisterModule() {
 	var module Module
-	_, err := zgrab2.AddCommand("msrpc", "MSRPC", module.Description(), 135, &module)
+	_, err := zgrab2.AddCommand("msrpc", "MSRPC", module.Description(), msrpcTCPPort, &module)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -62,6 +68,13 @@ func (f *Flags) Validate(_ []string) error {
 	if f.ReadTimeout <= 0 || f.MaxReadSize <= 0 || f.MaxEntries <= 0 {
 		return zgrab2.ErrInvalidArguments
 	}
+	f.EPMPolicy = strings.ToLower(strings.TrimSpace(f.EPMPolicy))
+	if f.EPMPolicy == "" {
+		f.EPMPolicy = epmPolicyAll
+	}
+	if f.EPMPolicy != epmPolicyAll && f.EPMPolicy != epmPolicyVerified {
+		return zgrab2.ErrInvalidArguments
+	}
 	return nil
 }
 
@@ -78,6 +91,9 @@ func (s *Scanner) Init(flags zgrab2.ScanFlags) error {
 	}
 	if f.MaxEntries > defaultMaxEPMEntries {
 		f.MaxEntries = defaultMaxEPMEntries
+	}
+	if f.UseHTTP && f.Port == msrpcTCPPort {
+		f.Port = msrpcHTTPPort
 	}
 	s.config = f
 	return nil
@@ -116,6 +132,25 @@ func (s *Scanner) Scan(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, error)
 
 func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, error) {
 	results := &ScanResults{Mode: "tcp"}
+
+	if !s.config.UseNTLM && !s.config.DoEPM && !s.config.DoIOXID {
+		probeConn, probeErr := target.Open(&s.config.BaseFlags)
+		if probeErr != nil {
+			return zgrab2.TryGetScanStatus(probeErr), nil, probeErr
+		}
+		bind, _, bindErr := s.performBind(probeConn, uuidEndpointMapper, 3, 0, 1, nil)
+		_ = probeConn.Close()
+		if bind != nil {
+			results.Bind = bind
+		}
+		if bindErr != nil {
+			return zgrab2.TryGetScanStatus(bindErr), results, bindErr
+		}
+		if bind == nil || !bind.Accepted {
+			return zgrab2.SCAN_PROTOCOL_ERROR, results, fmt.Errorf("epm bind probe failed")
+		}
+		return zgrab2.SCAN_SUCCESS, results, nil
+	}
 
 	if s.config.UseNTLM {
 		ntlmToken, _ := buildNTLMNegotiateToken()

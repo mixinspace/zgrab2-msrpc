@@ -38,6 +38,11 @@ const (
 	uuidNDRTransferSyntax = "8A885D04-1CEB-11C9-9FE8-08002B104860"
 )
 
+const (
+	epmPolicyAll      = "all"
+	epmPolicyVerified = "verified"
+)
+
 var (
 	ipv4Regex = regexp.MustCompile(`\b(?:\d{1,3}\.){3}\d{1,3}\b`)
 	ipv6Regex = regexp.MustCompile(`\b[0-9a-fA-F:]{2,}\b`)

@@ -70,9 +70,58 @@ type epmParsedRecord struct {
 }
 
 type epmLookupEntry struct {
-	Name     string `json:"name"`
-	Protocol string `json:"protocol"`
-	Provider string `json:"provider"`
+	Name     string           `json:"name"`
+	Protocol string           `json:"protocol"`
+	Provider string           `json:"provider"`
+	Sources  epmLookupSources `json:"sources"`
+}
+
+type epmLookupStrings []string
+
+func (s *epmLookupStrings) UnmarshalJSON(data []byte) error {
+	if bytes.Equal(data, []byte("null")) {
+		*s = nil
+		return nil
+	}
+
+	var single string
+	if err := json.Unmarshal(data, &single); err == nil {
+		single = strings.TrimSpace(single)
+		if single == "" {
+			*s = nil
+		} else {
+			*s = []string{single}
+		}
+		return nil
+	}
+
+	var many []string
+	if err := json.Unmarshal(data, &many); err == nil {
+		out := make([]string, 0, len(many))
+		for _, item := range many {
+			item = strings.TrimSpace(item)
+			if item == "" {
+				continue
+			}
+			out = append(out, item)
+		}
+		*s = out
+		return nil
+	}
+
+	return fmt.Errorf("unsupported epm source string shape")
+}
+
+type epmLookupFieldSource struct {
+	IsOfficial  bool             `json:"is_official"`
+	Description epmLookupStrings `json:"description"`
+	References  epmLookupStrings `json:"reference"`
+}
+
+type epmLookupSources struct {
+	Name     *epmLookupFieldSource `json:"name"`
+	Protocol *epmLookupFieldSource `json:"protocol"`
+	Provider *epmLookupFieldSource `json:"provider"`
 }
 
 var (
@@ -213,7 +262,7 @@ func (s *Scanner) performEPMLookup(conn net.Conn, target zgrab2.ScanTarget) (*EP
 	}
 
 	interfaces, unresolved := aggregateEPMRecords(records)
-	interfaces = enrichEPM(interfaces)
+	interfaces = enrichEPM(interfaces, s.config.EPMPolicy)
 	result.Interfaces = interfaces
 	result.Unresolved = unresolved
 	result.Success = hadResponse
@@ -884,7 +933,7 @@ func aggregateEPMRecords(input []epmParsedRecord) ([]EPMInterface, []EPMUnresolv
 	return interfaces, unresolved
 }
 
-func enrichEPM(input []EPMInterface) []EPMInterface {
+func enrichEPM(input []EPMInterface, policy string) []EPMInterface {
 	if len(input) == 0 {
 		return input
 	}
@@ -905,18 +954,28 @@ func enrichEPM(input []EPMInterface) []EPMInterface {
 			continue
 		}
 
-		if entry.Name != "" {
+		if shouldApplyEPMEnrichmentField(entry.Name, entry.Sources.Name, policy) {
 			input[i].Name = entry.Name
 		}
-		if entry.Protocol != "" {
+		if shouldApplyEPMEnrichmentField(entry.Protocol, entry.Sources.Protocol, policy) {
 			input[i].Protocol = entry.Protocol
 		}
-		if entry.Provider != "" {
+		if shouldApplyEPMEnrichmentField(entry.Provider, entry.Sources.Provider, policy) {
 			input[i].Provider = entry.Provider
 		}
 	}
 
 	return input
+}
+
+func shouldApplyEPMEnrichmentField(value string, source *epmLookupFieldSource, policy string) bool {
+	if value == "" {
+		return false
+	}
+	if policy != epmPolicyVerified {
+		return true
+	}
+	return source != nil && source.IsOfficial
 }
 
 func loadEPMLookup() (map[string]epmLookupEntry, error) {
