@@ -175,9 +175,10 @@ type HTTPResult struct {
 
 // ScanResults is the output of the scan.
 type ScanResults struct {
-	Mode  string       `json:"mode,omitempty"`
-	Bind  *BindResult  `json:"bind,omitempty"`
-	HTTP  *HTTPResult  `json:"http,omitempty"`
-	IOXID *IOXIDResult `json:"ioxid,omitempty"`
-	EPM   *EPMResult   `json:"epm,omitempty"`
+	Mode       string       `json:"mode,omitempty"`
+	Bind       *BindResult  `json:"bind,omitempty"`
+	HTTP       *HTTPResult  `json:"http,omitempty"`
+	IOXID      *IOXIDResult `json:"ioxid,omitempty"`
+	EPM        *EPMResult   `json:"epm,omitempty"`
+	ServerRole *ServerRole  `json:"server_role,omitempty"`
 }

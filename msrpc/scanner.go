@@ -24,6 +24,7 @@ type Flags struct {
 	DoEPM       bool   `long:"epm" description:"Run Endpoint Mapper lookup (TCP and HTTP mode)"`
 	DoIOXID     bool   `long:"ioxid" description:"Run IOXIDResolver ServerAlive2 (TCP and HTTP mode)"`
 	UseNTLM     bool   `long:"ntlm" description:"Include NTLM negotiate auth in bind requests and parse challenge metadata"`
+	IncludeRole bool   `long:"server-role" description:"Infer likely server role and include the server_role field in the JSON output"`
 	EPMPolicy   string `long:"epm-policy" description:"EPM enrichment policy: all or verified" default:"all"`
 	ReadTimeout int    `long:"read-timeout" description:"Read timeout in milliseconds" default:"3000"`
 	MaxReadSize int    `long:"max-read-size" description:"Maximum amount of data to read in KiB (1024 bytes)" default:"1024"`
@@ -128,6 +129,9 @@ func (s *Scanner) Scan(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, error)
 
 func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, error) {
 	results := &ScanResults{Mode: "tcp"}
+	finish := func(status zgrab2.ScanStatus, err error) (zgrab2.ScanStatus, any, error) {
+		return status, finalizeResults(results, s.config.IncludeRole), err
+	}
 
 	if !s.config.UseNTLM && !s.config.DoEPM && !s.config.DoIOXID {
 		probeConn, probeErr := target.Open(&s.config.BaseFlags)
@@ -140,12 +144,12 @@ func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, err
 			results.Bind = bind
 		}
 		if bindErr != nil {
-			return zgrab2.TryGetScanStatus(bindErr), results, bindErr
+			return finish(zgrab2.TryGetScanStatus(bindErr), bindErr)
 		}
 		if bind == nil || !bind.Accepted {
-			return zgrab2.SCAN_PROTOCOL_ERROR, results, fmt.Errorf("epm bind probe failed")
+			return finish(zgrab2.SCAN_PROTOCOL_ERROR, fmt.Errorf("epm bind probe failed"))
 		}
-		return zgrab2.SCAN_SUCCESS, results, nil
+		return finish(zgrab2.SCAN_SUCCESS, nil)
 	}
 
 	if s.config.UseNTLM {
@@ -160,17 +164,17 @@ func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, err
 			results.Bind = ntlmBind
 		}
 		if ntlmErr != nil {
-			return zgrab2.TryGetScanStatus(ntlmErr), results, ntlmErr
+			return finish(zgrab2.TryGetScanStatus(ntlmErr), ntlmErr)
 		}
 		if ntlmBind == nil || !ntlmBind.Accepted {
-			return zgrab2.SCAN_PROTOCOL_ERROR, results, fmt.Errorf("ntlm bind failed")
+			return finish(zgrab2.SCAN_PROTOCOL_ERROR, fmt.Errorf("ntlm bind failed"))
 		}
 	}
 
 	if s.config.DoEPM {
 		epmConn, epmOpenErr := target.Open(&s.config.BaseFlags)
 		if epmOpenErr != nil {
-			return zgrab2.TryGetScanStatus(epmOpenErr), results, epmOpenErr
+			return finish(zgrab2.TryGetScanStatus(epmOpenErr), epmOpenErr)
 		}
 		epm, epmBind, epmErr := s.performEPMLookupConn(epmConn, target)
 		_ = epmConn.Close()
@@ -178,7 +182,7 @@ func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, err
 			results.Bind = epmBind
 		}
 		if epmErr != nil {
-			return zgrab2.TryGetScanStatus(epmErr), results, epmErr
+			return finish(zgrab2.TryGetScanStatus(epmErr), epmErr)
 		}
 		results.EPM = epm
 	}
@@ -186,7 +190,7 @@ func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, err
 	if s.config.DoIOXID {
 		ioxidConn, ioxidOpenErr := target.Open(&s.config.BaseFlags)
 		if ioxidOpenErr != nil {
-			return zgrab2.TryGetScanStatus(ioxidOpenErr), results, ioxidOpenErr
+			return finish(zgrab2.TryGetScanStatus(ioxidOpenErr), ioxidOpenErr)
 		}
 
 		ioxid, ioxidBind, ioxidErr := s.performIOXIDLookupConn(ioxidConn)
@@ -200,13 +204,16 @@ func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, err
 		results.IOXID = ioxid
 	}
 
-	return zgrab2.SCAN_SUCCESS, results, nil
+	return finish(zgrab2.SCAN_SUCCESS, nil)
 }
 
 func (s *Scanner) scanHTTP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, error) {
 	results := &ScanResults{
 		Mode: "http",
 		HTTP: &HTTPResult{},
+	}
+	finish := func(status zgrab2.ScanStatus, err error) (zgrab2.ScanStatus, any, error) {
+		return status, finalizeResults(results, s.config.IncludeRole), err
 	}
 
 	verifyHTTPBanner := func(conn net.Conn) (bool, error) {
@@ -234,27 +241,27 @@ func (s *Scanner) scanHTTP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, er
 		detected, bannerErr := verifyHTTPBanner(probeConn)
 		_ = probeConn.Close()
 		if bannerErr != nil {
-			return zgrab2.TryGetScanStatus(bannerErr), results, bannerErr
+			return finish(zgrab2.TryGetScanStatus(bannerErr), bannerErr)
 		}
 		if !detected {
-			return zgrab2.SCAN_PROTOCOL_ERROR, results, fmt.Errorf("ncacn_http banner not detected")
+			return finish(zgrab2.SCAN_PROTOCOL_ERROR, fmt.Errorf("ncacn_http banner not detected"))
 		}
-		return zgrab2.SCAN_SUCCESS, results, nil
+		return finish(zgrab2.SCAN_SUCCESS, nil)
 	}
 
 	if s.config.UseNTLM {
 		ntlmConn, ntlmOpenErr := target.Open(&s.config.BaseFlags)
 		if ntlmOpenErr != nil {
-			return zgrab2.TryGetScanStatus(ntlmOpenErr), results, ntlmOpenErr
+			return finish(zgrab2.TryGetScanStatus(ntlmOpenErr), ntlmOpenErr)
 		}
 		detected, bannerErr := verifyHTTPBanner(ntlmConn)
 		if bannerErr != nil {
 			_ = ntlmConn.Close()
-			return zgrab2.TryGetScanStatus(bannerErr), results, bannerErr
+			return finish(zgrab2.TryGetScanStatus(bannerErr), bannerErr)
 		}
 		if !detected {
 			_ = ntlmConn.Close()
-			return zgrab2.SCAN_PROTOCOL_ERROR, results, fmt.Errorf("ncacn_http banner not detected")
+			return finish(zgrab2.SCAN_PROTOCOL_ERROR, fmt.Errorf("ncacn_http banner not detected"))
 		}
 
 		ntlmToken, _ := buildNTLMNegotiateToken()
@@ -264,26 +271,26 @@ func (s *Scanner) scanHTTP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, er
 			results.Bind = bind
 		}
 		if bindErr != nil {
-			return zgrab2.TryGetScanStatus(bindErr), results, bindErr
+			return finish(zgrab2.TryGetScanStatus(bindErr), bindErr)
 		}
 		if bind == nil || !bind.Accepted {
-			return zgrab2.SCAN_PROTOCOL_ERROR, results, fmt.Errorf("ntlm bind failed over http")
+			return finish(zgrab2.SCAN_PROTOCOL_ERROR, fmt.Errorf("ntlm bind failed over http"))
 		}
 	}
 
 	if s.config.DoEPM {
 		epmConn, epmOpenErr := target.Open(&s.config.BaseFlags)
 		if epmOpenErr != nil {
-			return zgrab2.TryGetScanStatus(epmOpenErr), results, epmOpenErr
+			return finish(zgrab2.TryGetScanStatus(epmOpenErr), epmOpenErr)
 		}
 		detected, bannerErr := verifyHTTPBanner(epmConn)
 		if bannerErr != nil {
 			_ = epmConn.Close()
-			return zgrab2.TryGetScanStatus(bannerErr), results, bannerErr
+			return finish(zgrab2.TryGetScanStatus(bannerErr), bannerErr)
 		}
 		if !detected {
 			_ = epmConn.Close()
-			return zgrab2.SCAN_PROTOCOL_ERROR, results, fmt.Errorf("ncacn_http banner not detected")
+			return finish(zgrab2.SCAN_PROTOCOL_ERROR, fmt.Errorf("ncacn_http banner not detected"))
 		}
 
 		epm, epmBind, epmErr := s.performEPMLookupConn(epmConn, target)
@@ -292,7 +299,7 @@ func (s *Scanner) scanHTTP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, er
 			results.Bind = epmBind
 		}
 		if epmErr != nil {
-			return zgrab2.TryGetScanStatus(epmErr), results, epmErr
+			return finish(zgrab2.TryGetScanStatus(epmErr), epmErr)
 		}
 		results.EPM = epm
 	}
@@ -300,16 +307,16 @@ func (s *Scanner) scanHTTP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, er
 	if s.config.DoIOXID {
 		ioxidConn, ioxidOpenErr := target.Open(&s.config.BaseFlags)
 		if ioxidOpenErr != nil {
-			return zgrab2.TryGetScanStatus(ioxidOpenErr), results, ioxidOpenErr
+			return finish(zgrab2.TryGetScanStatus(ioxidOpenErr), ioxidOpenErr)
 		}
 		detected, bannerErr := verifyHTTPBanner(ioxidConn)
 		if bannerErr != nil {
 			_ = ioxidConn.Close()
-			return zgrab2.TryGetScanStatus(bannerErr), results, bannerErr
+			return finish(zgrab2.TryGetScanStatus(bannerErr), bannerErr)
 		}
 		if !detected {
 			_ = ioxidConn.Close()
-			return zgrab2.SCAN_PROTOCOL_ERROR, results, fmt.Errorf("ncacn_http banner not detected")
+			return finish(zgrab2.SCAN_PROTOCOL_ERROR, fmt.Errorf("ncacn_http banner not detected"))
 		}
 
 		ioxid, ioxidBind, ioxidErr := s.performIOXIDLookupConn(ioxidConn)
@@ -323,7 +330,7 @@ func (s *Scanner) scanHTTP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, er
 		results.IOXID = ioxid
 	}
 
-	return zgrab2.SCAN_SUCCESS, results, nil
+	return finish(zgrab2.SCAN_SUCCESS, nil)
 }
 
 func (s *Scanner) readNCACNHTTPBanner(conn net.Conn) (string, bool, error) {
