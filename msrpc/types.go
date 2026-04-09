@@ -180,5 +180,5 @@ type ScanResults struct {
 	HTTP       *HTTPResult  `json:"http,omitempty"`
 	IOXID      *IOXIDResult `json:"ioxid,omitempty"`
 	EPM        *EPMResult   `json:"epm,omitempty"`
-	ServerRole *ServerRole  `json:"server_role,omitempty"`
+	ServerRole *ServerRole  `json:"server_role_heuristic,omitempty"`
 }
