@@ -24,7 +24,7 @@ type Flags struct {
 	DoEPM       bool   `long:"epm" description:"Run Endpoint Mapper lookup (TCP and HTTP mode)"`
 	DoIOXID     bool   `long:"ioxid" description:"Run IOXIDResolver ServerAlive2 (TCP and HTTP mode)"`
 	UseNTLM     bool   `long:"ntlm" description:"Include NTLM negotiate auth in bind requests and parse challenge metadata"`
-	IncludeRole bool   `long:"server-role" description:"Infer likely server role and include the server_role field in the JSON output"`
+	IncludeRole bool   `long:"server-role" description:"Infer likely server role and include the server_role_heuristic field in the JSON output"`
 	EPMPolicy   string `long:"epm-policy" description:"EPM enrichment policy: all or verified" default:"all"`
 	ReadTimeout int    `long:"read-timeout" description:"Read timeout in milliseconds" default:"3000"`
 	MaxReadSize int    `long:"max-read-size" description:"Maximum amount of data to read in KiB (1024 bytes)" default:"1024"`
