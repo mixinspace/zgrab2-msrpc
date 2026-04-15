@@ -127,12 +127,6 @@
       }
     }
   },
-  "04585b33-7cf3-4b6c-b834-b904a81ae33d": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "048cf666-ab42-42b4-8975-1357018decb3": {
     "name": "RPCNSPv2 RPC interface",
     "protocol": null,
@@ -694,18 +688,6 @@
       }
     }
   },
-  "0f713870-53a1-4156-997b-d95ab2162395": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
-  "0f738e20-73c0-4ca8-aa6a-8dfef545fea8": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "0f9719b5-6a85-4bad-abdf-d8a678600f9b": {
     "name": null,
     "protocol": null,
@@ -798,12 +780,6 @@
       }
     }
   },
-  "10d20e7a-2530-494a-ac01-b8dd04480ad2": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "11220835-5b26-4d94-ae86-c3e475a809de": {
     "name": "SSCrypt RPC interface",
     "protocol": null,
@@ -818,54 +794,6 @@
           "rpc_dump_rs5.txt",
           "rpc_dump_rs4.txt"
         ]
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
-        ]
-      }
-    }
-  },
-  "112b1dff-d9dc-41f7-869f-d67fee7cb591": {
-    "name": "ITpmVirtualSmartCardManager",
-    "protocol": "MS-TPMVSC",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
-      }
-    }
-  },
-  "11899a43-2b68-4a76-92e3-a3d6ad8c26ce": {
-    "name": "TermSrvNotification",
-    "protocol": "MS-TSTS",
-    "provider": "lsm.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
       },
       "provider": {
         "is_documented": false,
@@ -900,12 +828,6 @@
       }
     }
   },
-  "11c6212d-d5f3-4500-ab16-634dc63037be": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "11f25515-c879-400a-989e-b074d5f092fe": {
     "name": null,
     "protocol": null,
@@ -926,12 +848,6 @@
         ]
       }
     }
-  },
-  "11f2718c-c591-4a52-88bd-bf056fb4dd3c": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "12108a88-6858-4467-b92f-e6cf4568dfb6": {
     "name": "IClusterStorage2",
@@ -1102,37 +1018,6 @@
       }
     }
   },
-  "1257b580-ce2f-4109-82d6-a9459d0bf6bc": {
-    "name": "Protocol",
-    "protocol": "MS-TSTS",
-    "provider": "sessenv.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
-        ]
-      }
-    }
-  },
   "12b81e99-f207-4a4c-85d3-77b42f76fd14": {
     "name": null,
     "protocol": null,
@@ -1182,23 +1067,6 @@
           "scan.txt",
           "https://www.shodan.io/search?query=12e65dd8-887f-41ef-91bf-8d816c42c2e7"
         ]
-      }
-    }
-  },
-  "135698d2-3a37-4d26-99df-e2bb6ae3ac61": {
-    "name": "IVolumeClient3 interface",
-    "protocol": "MS-DMRP",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": false,
-        "description": "Open Source Intelligence",
-        "reference": "gpt_search_database.json"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DMRP].pdf"
       }
     }
   },
@@ -1272,23 +1140,6 @@
       }
     }
   },
-  "152ea2a8-70dc-4c59-8b2a-32aa3ca0dcac": {
-    "name": "RemoteTpmVirtualSmartCardManager",
-    "protocol": "MS-TPMVSC",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
-      }
-    }
-  },
   "1544f5e0-613c-11d1-93df-00c04fd7bd09": {
     "name": "RFRI RPC interface",
     "protocol": "MS-OXABREF",
@@ -1334,23 +1185,6 @@
           "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
           "rpc_dump_rs5.txt"
         ]
-      }
-    }
-  },
-  "16a18e86-7f6e-4c20-ad89-4ffc0db7a96a": {
-    "name": "TpmVirtualSmartCardManager",
-    "protocol": "MS-TPMVSC",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
       }
     }
   },
@@ -1441,12 +1275,6 @@
       }
     }
   },
-  "184ae2e3-127b-4291-9a9c-5aa60038e356": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "18f70770-8e64-11cf-9af1-0020af6e72f4": {
     "name": "Protseq RPC interface",
     "protocol": null,
@@ -1502,23 +1330,6 @@
           "rpc_dump_rs5.txt",
           "rpc_dump_rs4.txt"
         ]
-      }
-    }
-  },
-  "1a1bb35f-abb8-451c-a1ae-33d98f1bef4a": {
-    "name": "ITpmVirtualSmartCardManagerStatusCallback",
-    "protocol": "MS-TPMVSC",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
       }
     }
   },
@@ -1630,23 +1441,6 @@
         "is_documented": true,
         "description": "Official Microsoft Specification",
         "reference": "[MS-WMI].pdf"
-      }
-    }
-  },
-  "1c60a923-2d86-46aa-928a-e7f3e37577af": {
-    "name": "TpmVirtualSmartCardManagers",
-    "protocol": "MS-TPMVSC",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
       }
     }
   },
@@ -1852,36 +1646,6 @@
       }
     }
   },
-  "20610036-fa22-11cf-9823-00a0c911e5df": {
-    "name": "that",
-    "protocol": "MS-RRASM",
-    "provider": "rasmans.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs4.txt"
-        ]
-      }
-    }
-  },
   "20c40295-8dba-48e6-aebf-3e78ef3bb144": {
     "name": "SrvOdbPt RPC interface",
     "protocol": null,
@@ -1927,23 +1691,6 @@
         "is_documented": true,
         "description": "Official Microsoft Specification",
         "reference": "[MS-SCMP].pdf"
-      }
-    }
-  },
-  "21546ae8-4da5-445e-987f-627fea39c5e8": {
-    "name": "IWRMConfig",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
       }
     }
   },
@@ -2189,23 +1936,6 @@
       }
     }
   },
-  "2a3eb639-d134-422d-90d8-aaa1b5216202": {
-    "name": "IResourceManager2",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      }
-    }
-  },
   "2a82bb21-e44f-4791-9aa1-dfae788e2f43": {
     "name": "UbpmRpc RPC interface",
     "protocol": null,
@@ -2329,12 +2059,6 @@
         "reference": "[MS-WMI].pdf"
       }
     }
-  },
-  "2ce37c0d-a80b-415a-8f88-4456499212f5": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "2d24ff0b-1bab-404c-a0fd-42c85577bf68": {
     "name": null,
@@ -2468,53 +2192,6 @@
       }
     }
   },
-  "2f5f6520-ca46-1067-b319-00dd010662da": {
-    "name": "tapsrv",
-    "protocol": "MS-TRP",
-    "provider": "tapisrv.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TRP].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TRP].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs4.txt"
-        ]
-      }
-    }
-  },
-  "2f5f6521-ca47-1068-b319-00dd010662db": {
-    "name": "remotesp",
-    "protocol": "MS-TRP",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TRP].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TRP].pdf"
-      }
-    }
-  },
   "2f5f6521-cb55-1059-b446-00df0bce31db": {
     "name": null,
     "protocol": "null",
@@ -2529,8 +2206,7 @@
         "reference": [
           "rpc_dump_august.txt",
           "rpc_dump_rs4.txt",
-          "rpc_resolve.h",
-          "[MS-TRP].pdf"
+          "rpc_resolve.h"
         ]
       }
     }
@@ -2570,37 +2246,6 @@
         "is_documented": false,
         "description": "Open Source MappingDB",
         "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
-  "300f3532-38cc-11d0-a3f0-0020af6b0add": {
-    "name": "trkwks",
-    "protocol": "MS-DLTW",
-    "provider": "trkwks.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DLTW].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DLTW].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
-        ]
       }
     }
   },
@@ -2907,12 +2552,6 @@
       }
     }
   },
-  "36e92366-0ecc-4bf2-b982-e7ec6eccae37": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "3706415d-4987-4fcf-9e08-00742572bd5a": {
     "name": null,
     "protocol": null,
@@ -2988,37 +2627,6 @@
       }
     }
   },
-  "3919286a-b10c-11d0-9ba8-00c04fd92ef5": {
-    "name": "dssetup",
-    "protocol": "MS-DSSP",
-    "provider": "lsasrv.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DSSP].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DSSP].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
-        ]
-      }
-    }
-  },
   "39730ec4-82ea-4fdf-8a45-c408e393e212": {
     "name": "CredManIum RPC interface",
     "protocol": null,
@@ -3035,29 +2643,6 @@
         "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
       }
     }
-  },
-  "3a410f21-553f-11d1-8e5e-00a0c92c9d5d": {
-    "name": "IDMRemoteServer interface",
-    "protocol": "MS-DMRP",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": false,
-        "description": "Open Source Intelligence",
-        "reference": "gpt_search_database.json"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DMRP].pdf"
-      }
-    }
-  },
-  "3a57eec9-4a9d-4005-8700-07590e085825": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "3a7e8d55-62d7-4626-8af6-c19598881347": {
     "name": "CredFetch RPC interface",
@@ -3169,23 +2754,6 @@
       }
     }
   },
-  "3c745a97-f375-4150-be17-5950f694c699": {
-    "name": "ITpmVirtualSmartCardManager3",
-    "protocol": "MS-TPMVSC",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
-      }
-    }
-  },
   "3cfee98c-fb4b-44c6-bd98-a1db14abca3f": {
     "name": "ClusterFirewall",
     "protocol": "MS-CSVP",
@@ -3220,28 +2788,6 @@
     "protocol": null,
     "provider": "DeviceSetupManager.dll",
     "sources": {
-      "provider": {
-        "is_documented": false,
-        "description": "Open Source MappingDB",
-        "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
-  "3dde7c30-165d-11d1-ab8f-00805f14db40": {
-    "name": "BackupKey",
-    "protocol": "MS-BKRP",
-    "provider": "dpapisrv.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-BKRP].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-BKRP].pdf"
-      },
       "provider": {
         "is_documented": false,
         "description": "Open Source MappingDB",
@@ -3653,54 +3199,6 @@
       }
     }
   },
-  "481e06cf-ab04-4498-8ffe-124a0a34296d": {
-    "name": "IWRMCalendar",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      }
-    }
-  },
-  "484809d6-4239-471b-b5bc-61df8c23ac48": {
-    "name": "to",
-    "protocol": "MS-TSTS",
-    "provider": "lsm.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
-        ]
-      }
-    }
-  },
   "491260b5-05c9-40d9-b7f2-1f7bdae0927f": {
     "name": "IClusterSetup",
     "protocol": "MS-CSVP",
@@ -3727,43 +3225,6 @@
         "is_documented": false,
         "description": "Open Source MappingDB",
         "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
-  "49461cac-a1e3-42b7-9328-972783b9391e": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
-  "497d95a6-2d27-4bf5-9bbd-a6046957133c": {
-    "name": "RCMListener",
-    "protocol": "MS-TSTS",
-    "provider": "termsrv.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
-        ]
       }
     }
   },
@@ -3881,29 +3342,6 @@
           "rpc_dump_rs5.txt",
           "rpc_dump_rs4.txt"
         ]
-      }
-    }
-  },
-  "4baec855-44ef-47a0-8d27-97df1427bd3e": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
-  "4bdafc52-fe6a-11d2-93f8-00105a11164a": {
-    "name": "IVolumeClient2 interface",
-    "protocol": "MS-DMRP",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": false,
-        "description": "Open Source Intelligence",
-        "reference": "gpt_search_database.json"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DMRP].pdf"
       }
     }
   },
@@ -4180,23 +3618,6 @@
       }
     }
   },
-  "4f7ca01c-a9e5-45b6-b142-2332a1339c1d": {
-    "name": "IWRMAccounting",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      }
-    }
-  },
   "4fc742e0-4a10-11cf-8273-00aa004ae673": {
     "name": "netdfs",
     "protocol": "MS-DFSNM",
@@ -4373,28 +3794,6 @@
       }
     }
   },
-  "53b46b02-c73b-4a3e-8dee-b16b80672fc0": {
-    "name": "TSVIPPublic",
-    "protocol": "MS-TSTS",
-    "provider": "TSVIPSrv.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": "Open Source MappingDB",
-        "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
   "541679ab-2e5f-11d3-b34e-00104bcc4b4a": {
     "name": "IWbemLoginHelper",
     "protocol": "MS-WMI",
@@ -4409,23 +3808,6 @@
         "is_documented": true,
         "description": "Official Microsoft Specification",
         "reference": "[MS-WMI].pdf"
-      }
-    }
-  },
-  "5422fd3a-d4b8-4cef-a12e-e87d4ca22e90": {
-    "name": "ICertRequestD2",
-    "protocol": "MS-WCCE",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WCCE].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WCCE].pdf"
       }
     }
   },
@@ -4619,29 +4001,6 @@
       }
     }
   },
-  "59602eb6-57b0-4fd8-aa4b-ebf06971fe15": {
-    "name": "IWRMPolicy",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      }
-    }
-  },
-  "59c12b3a-0a92-4835-8730-64e504058a20": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "5a0ce74d-f9cf-4dea-a4c1-2d5fe4c89d51": {
     "name": "WARPJITOOPServer RPC interface",
     "protocol": null,
@@ -4746,12 +4105,6 @@
       }
     }
   },
-  "5c7903b5-0a93-4345-819a-fb8778e74165": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "5c9a4cd7-ba75-45d2-9898-1773b3d1e5f1": {
     "name": null,
     "protocol": null,
@@ -4761,37 +4114,6 @@
         "is_documented": false,
         "description": "Open Source MappingDB",
         "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
-  "5ca4a760-ebb1-11cf-8611-00a0245420ed": {
-    "name": "IcaApi",
-    "protocol": "MS-TSTS",
-    "provider": "termsrv.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
-        ]
       }
     }
   },
@@ -4899,80 +4221,6 @@
       }
     }
   },
-  "5ff9bdf6-bd91-4d8b-a614-d6317acc8dd8": {
-    "name": "is",
-    "protocol": "MS-RRASM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      }
-    }
-  },
-  "6099fc12-3eff-11d0-abd0-00c04fd91a4e": {
-    "name": "faxclient",
-    "protocol": "MS-FAX",
-    "provider": "FXSAPI.DLL",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-FAX].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-FAX].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": "Open Source MappingDB",
-        "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
-  "60a1f74a-a67a-4e81-ac5c-524f26932a24": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
-  "6139d8a4-e508-4ebb-bac7-d7f275145897": {
-    "name": "IRemoteIPV6Config",
-    "protocol": "MS-RRASM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      }
-    }
-  },
-  "6230b0fb-f92f-4e5e-95c2-fa336c360be0": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
-  "6319e220-2fd5-48bc-a92f-ba70384e4d24": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "63fbe424-2029-11d1-8db8-00aa004abd5e": {
     "name": null,
     "protocol": null,
@@ -5077,74 +4325,6 @@
       }
     }
   },
-  "66a2db1b-d706-11d0-a37b-00c04fc9da04": {
-    "name": "Invoke",
-    "protocol": "MS-RRASM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      }
-    }
-  },
-  "66a2db20-d706-11d0-a37b-00c04fc9da04": {
-    "name": "contains",
-    "protocol": "MS-RRASM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      }
-    }
-  },
-  "66a2db21-d706-11d0-a37b-00c04fc9da04": {
-    "name": "IRemoteSetDnsConfig",
-    "protocol": "MS-RRASM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      }
-    }
-  },
-  "66a2db22-d706-11d0-a37b-00c04fc9da04": {
-    "name": "IRemoteICFICSConfig",
-    "protocol": "MS-RRASM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      }
-    }
-  },
   "674b6698-ee92-11d0-ad71-00c04fd8fdff": {
     "name": "WbemContext",
     "protocol": "MS-WMI",
@@ -5171,29 +4351,6 @@
         "is_documented": false,
         "description": "Open Source MappingDB",
         "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
-  "6790731c-dcbf-4e90-9182-0369fba9df4c": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
-  "67e08fc2-2984-4b62-b92e-fc1aae64bbbb": {
-    "name": "IRemoteStringIdConfig",
-    "protocol": "MS-RRASM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
       }
     }
   },
@@ -5794,12 +4951,6 @@
       }
     }
   },
-  "78dcce84-7f13-4139-b8cd-ef222aa0408b": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "78e5d322-59a2-4324-ae3f-8bc8de32bdfc": {
     "name": null,
     "protocol": null,
@@ -5987,12 +5138,6 @@
         "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
       }
     }
-  },
-  "7e4fb2fa-c82b-4400-8fa1-88a1f6569609": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "7ea70bcf-48af-4f6a-8968-6a440754d5fa": {
     "name": null,
@@ -6458,37 +5603,6 @@
       }
     }
   },
-  "88143fd0-c28d-4b2b-8fef-8d882f6a9390": {
-    "name": "TermSrvEnumeration",
-    "protocol": "MS-TSTS",
-    "provider": "lsm.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
-        ]
-      }
-    }
-  },
   "8833d1d0-965f-4216-b3e9-fbe58cad3100": {
     "name": null,
     "protocol": null,
@@ -6831,63 +5945,6 @@
       }
     }
   },
-  "8f09f000-b7ed-11ce-bbd2-00001a181cad": {
-    "name": "dimsvc",
-    "protocol": "MS-RRASM",
-    "provider": "mprdim.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-RRASM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": [
-          "Open Source MappingDB",
-          "Official Microsoft Specification"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "[MS-RRASM].pdf"
-        ]
-      },
-      "provider": {
-        "is_documented": false,
-        "description": "Open Source MappingDB",
-        "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
-  "8fb6d884-2388-11d0-8c35-00c04fda2795": {
-    "name": "W32Time",
-    "protocol": "MS-W32T",
-    "provider": "w32time.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-W32T].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-W32T].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_rs5.txt"
-        ]
-      }
-    }
-  },
   "8fb74744-b2ff-4c00-be0d-9ef9a191fe1b": {
     "name": null,
     "protocol": null,
@@ -6949,12 +6006,6 @@
         ]
       }
     }
-  },
-  "911da220-8ced-4cc1-b7ab-51b853a52838": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "91ae6020-9e3c-11cf-8d7c-00aa00c091be": {
     "name": "ICertPassage",
@@ -7062,23 +6113,6 @@
         "is_documented": false,
         "description": "Open Source MappingDB",
         "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
-  "943991a5-b3fe-41fa-9696-7f7b656ee34b": {
-    "name": "IWRMMachineGroup",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
       }
     }
   },
@@ -7351,12 +6385,6 @@
         "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
       }
     }
-  },
-  "9c960522-4a83-4889-bbbe-4a251bb3c3d9": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "9cbc9d3a-7586-4814-8d70-18737dcbe523": {
     "name": null,
@@ -7778,18 +6806,6 @@
         "reference": "[MS-CSVP].pdf"
       }
     }
-  },
-  "a6fb5f6c-a70c-468e-9cb2-21667d31c5cd": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
-  "a723bb12-9833-4601-96e7-f179e7e2bfc8": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "a8e0653c-2744-4389-a61d-7373df8b2292": {
     "name": "FileServerVssAgent",
@@ -8530,35 +7546,6 @@
       }
     }
   },
-  "bc681469-9dd9-4bf4-9b3d-709f69efe431": {
-    "name": "IWRMResourceGroup",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      }
-    }
-  },
-  "bca7fec7-03e5-4726-b1d9-85cbbef761b5": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
-  "bd6ca954-842e-468f-8b07-89cbfa9522dc": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "bd7c23c2-c805-457c-8f86-d17fe6b9d19f": {
     "name": "IClusterLogEx",
     "protocol": "MS-CSVP",
@@ -8601,37 +7588,6 @@
     "protocol": null,
     "provider": "psmsrv.dll",
     "sources": {
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
-        ]
-      }
-    }
-  },
-  "bde95fdf-eee0-45de-9e12-e5a61cd0d4fe": {
-    "name": "RCMPublic",
-    "protocol": "MS-TSTS",
-    "provider": "termsrv.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TSTS].pdf"
-      },
       "provider": {
         "is_documented": false,
         "description": [
@@ -8905,12 +7861,6 @@
       }
     }
   },
-  "c3a80ebe-7c43-4ff0-9878-5e1dc92dbff5": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "c3f42c6e-d4cc-4e5a-938b-9c5e8a5d8c2e": {
     "name": null,
     "protocol": null,
@@ -9039,23 +7989,6 @@
       }
     }
   },
-  "c5cebee2-9df5-4cdd-a08c-c2471bc144b4": {
-    "name": "IResourceManager",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      }
-    }
-  },
   "c604b99f-725f-43d8-a6b8-185086c09c9c": {
     "name": "EdgeToControlServer RPC interface",
     "protocol": null,
@@ -9093,12 +8026,6 @@
         ]
       }
     }
-  },
-  "c65dea0d-21c4-4c00-b687-64778d7461ec": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "c681d488-d850-11d0-8c52-00c04fd90f7e": {
     "name": "efsrpc",
@@ -9303,18 +8230,6 @@
         ]
       }
     }
-  },
-  "c9e55439-48f8-49b1-a17e-2f3fab9a2657": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
-  "caaa9188-2b56-486f-b07f-71a679722189": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "cad784cb-4c1b-4d96-b8f7-4716b568b13c": {
     "name": "UrlCache RPC interface",
@@ -9565,46 +8480,6 @@
       }
     }
   },
-  "d2d79df5-3400-11d0-b40b-00aa005ff586": {
-    "name": "IVolumeClient interface",
-    "protocol": "MS-DMRP",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": false,
-        "description": "Open Source Intelligence",
-        "reference": "gpt_search_database.json"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DMRP].pdf"
-      }
-    }
-  },
-  "d2d79df7-3400-11d0-b40b-00aa005ff586": {
-    "name": "IDMNotify interface",
-    "protocol": "MS-DMRP",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": false,
-        "description": "Open Source Intelligence",
-        "reference": "gpt_search_database.json"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DMRP].pdf"
-      }
-    }
-  },
-  "d32ba710-12ed-49be-b2e7-7c956480abe1": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
-  },
   "d335b8f6-cb31-11d0-b0f9-006097ba4e54": {
     "name": "IPSEC Policy Agent (PoicyAgent)",
     "protocol": null,
@@ -9764,23 +8639,6 @@
         "is_documented": false,
         "description": "Open Source MappingDB",
         "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
-  "d99e6e70-fc88-11d0-b498-00a0c90312f3": {
-    "name": "ICertRequestD",
-    "protocol": "MS-WCCE",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WCCE].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WCCE].pdf"
       }
     }
   },
@@ -9998,23 +8856,6 @@
       }
     }
   },
-  "deb01010-3a37-4d26-99df-e2bb6ae3ac61": {
-    "name": "IVolumeClient4 interface",
-    "protocol": "MS-DMRP",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": false,
-        "description": "Open Source Intelligence",
-        "reference": "gpt_search_database.json"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DMRP].pdf"
-      }
-    }
-  },
   "df1941c5-fe89-4e79-bf10-463657acf44d": {
     "name": "EFSRPC RPC interface",
     "protocol": "MS-EFSR",
@@ -10071,12 +8912,6 @@
         ]
       }
     }
-  },
-  "dfc0c940-0a28-4454-8911-a590b13f419b": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "e00c29a5-0f62-4d84-b7f0-d2387e41ed18": {
     "name": null,
@@ -10449,23 +9284,6 @@
       }
     }
   },
-  "e8bcffac-b864-4574-b2e8-f1fb21dfdc18": {
-    "name": "ResourceManager",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      }
-    }
-  },
   "e8fb8620-588f-11d2-9d61-00c04f79c5fe": {
     "name": "IIisServiceControl",
     "protocol": "MS-IISS",
@@ -10480,28 +9298,6 @@
         "is_documented": true,
         "description": "Official Microsoft Specification",
         "reference": "[MS-IISS].pdf"
-      }
-    }
-  },
-  "ea0a3165-4834-11d2-a6f8-00c04fa346cc": {
-    "name": "fax",
-    "protocol": "MS-FAX",
-    "provider": "FXSSVC.exe",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-FAX].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-FAX].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": "Open Source MappingDB",
-        "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
       }
     }
   },
@@ -10548,12 +9344,6 @@
         ]
       }
     }
-  },
-  "ecb990b6-9e54-4345-92d2-2d024dda666c": {
-    "name": null,
-    "protocol": null,
-    "provider": null,
-    "sources": {}
   },
   "ecbdb051-f208-46b9-8c8b-648d9d3f3944": {
     "name": null,
@@ -10801,23 +9591,6 @@
         "is_documented": true,
         "description": "Official Microsoft Specification",
         "reference": "[MS-WMI].pdf"
-      }
-    }
-  },
-  "f31931a9-832d-481c-9503-887a0e6a79f0": {
-    "name": "IWRMProtocol",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
       }
     }
   },
@@ -11167,23 +9940,6 @@
       }
     }
   },
-  "fc910418-55ca-45ef-b264-83d4ce7d30e0": {
-    "name": "IWRMRemoteSessionMgmt",
-    "protocol": "MS-WSRM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-WSRM].pdf"
-      }
-    }
-  },
   "fd6b7e61-2bed-4d48-a267-d746fe449fed": {
     "name": null,
     "protocol": null,
@@ -11274,23 +10030,6 @@
         "is_documented": false,
         "description": "Open Source MappingDB",
         "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
-  "fdf8a2b9-02de-47f4-bc26-aa85ab5e5267": {
-    "name": "ITpmVirtualSmartCardManager2",
-    "protocol": "MS-TPMVSC",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-TPMVSC].pdf"
       }
     }
   },
