@@ -88,18 +88,19 @@ type parsedTower struct {
 
 // NTLMChallenge contains parsed NTLM challenge metadata when available.
 type NTLMChallenge struct {
-	TargetName      string   `json:"target_name,omitempty"`
-	NetBIOSComputer string   `json:"netbios_computer,omitempty"`
-	NetBIOSDomain   string   `json:"netbios_domain,omitempty"`
-	DNSComputer     string   `json:"dns_computer,omitempty"`
-	DNSDomain       string   `json:"dns_domain,omitempty"`
-	DNSTree         string   `json:"dns_tree,omitempty"`
-	TargetSPN       string   `json:"target_spn,omitempty"`
-	SystemTime      string   `json:"system_time,omitempty"`
-	BuildVersion    string   `json:"build_version,omitempty"`
-	NTLMRevision    uint8    `json:"ntlm_revision,omitempty"`
-	WindowsFamily   string   `json:"windows_family,omitempty"`
-	CandidateCPEs   []string `json:"candidate_cpes,omitempty"`
+	AssociationGroupID uint32   `json:"association_group_id,omitempty"`
+	TargetName         string   `json:"target_name,omitempty"`
+	NetBIOSComputer    string   `json:"netbios_computer,omitempty"`
+	NetBIOSDomain      string   `json:"netbios_domain,omitempty"`
+	DNSComputer        string   `json:"dns_computer,omitempty"`
+	DNSDomain          string   `json:"dns_domain,omitempty"`
+	DNSTree            string   `json:"dns_tree,omitempty"`
+	TargetSPN          string   `json:"target_spn,omitempty"`
+	SystemTime         string   `json:"system_time,omitempty"`
+	BuildVersion       string   `json:"build_version,omitempty"`
+	NTLMRevision       uint8    `json:"ntlm_revision,omitempty"`
+	WindowsFamily      string   `json:"windows_family,omitempty"`
+	CandidateCPEs      []string `json:"candidate_cpes,omitempty"`
 }
 
 // ResponsePDU describes the RPC PDU received during bind.
@@ -175,10 +176,11 @@ type HTTPResult struct {
 
 // ScanResults is the output of the scan.
 type ScanResults struct {
-	Mode       string       `json:"mode,omitempty"`
-	Bind       *BindResult  `json:"bind,omitempty"`
-	HTTP       *HTTPResult  `json:"http,omitempty"`
-	IOXID      *IOXIDResult `json:"ioxid,omitempty"`
-	EPM        *EPMResult   `json:"epm,omitempty"`
-	ServerRole *ServerRole  `json:"server_role_heuristic,omitempty"`
+	Mode          string         `json:"mode,omitempty"`
+	Bind          *BindResult    `json:"-"`
+	NTLMChallenge *NTLMChallenge `json:"ntlm_challenge,omitempty"`
+	HTTP          *HTTPResult    `json:"http,omitempty"`
+	IOXID         *IOXIDResult   `json:"ioxid,omitempty"`
+	EPM           *EPMResult     `json:"epm,omitempty"`
+	ServerRole    *ServerRole    `json:"server_role_heuristic,omitempty"`
 }

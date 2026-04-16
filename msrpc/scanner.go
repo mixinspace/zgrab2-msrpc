@@ -39,6 +39,18 @@ type Scanner struct {
 	config *Flags
 }
 
+func attachBindResult(results *ScanResults, bind *BindResult, setPrimary bool) {
+	if results == nil || bind == nil {
+		return
+	}
+	if setPrimary || results.Bind == nil {
+		results.Bind = bind
+	}
+	if bind.NTLMChallenge != nil {
+		results.NTLMChallenge = bind.NTLMChallenge
+	}
+}
+
 // RegisterModule registers the msrpc scan module.
 func RegisterModule() {
 	var module Module
@@ -140,9 +152,7 @@ func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, err
 		}
 		bind, _, bindErr := s.performBind(probeConn, uuidEndpointMapper, 3, 0, 1, nil)
 		_ = probeConn.Close()
-		if bind != nil {
-			results.Bind = bind
-		}
+		attachBindResult(results, bind, true)
 		if bindErr != nil {
 			return finish(zgrab2.TryGetScanStatus(bindErr), bindErr)
 		}
@@ -160,9 +170,7 @@ func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, err
 		}
 		ntlmBind, _, ntlmErr := s.performBind(ntlmConn, uuidEndpointMapper, 3, 0, 1, ntlmToken)
 		_ = ntlmConn.Close()
-		if ntlmBind != nil {
-			results.Bind = ntlmBind
-		}
+		attachBindResult(results, ntlmBind, true)
 		if ntlmErr != nil {
 			return finish(zgrab2.TryGetScanStatus(ntlmErr), ntlmErr)
 		}
@@ -178,9 +186,7 @@ func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, err
 		}
 		epm, epmBind, epmErr := s.performEPMLookupConn(epmConn, target)
 		_ = epmConn.Close()
-		if results.Bind == nil && epmBind != nil {
-			results.Bind = epmBind
-		}
+		attachBindResult(results, epmBind, false)
 		if epmErr != nil {
 			return finish(zgrab2.TryGetScanStatus(epmErr), epmErr)
 		}
@@ -195,9 +201,7 @@ func (s *Scanner) scanTCP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, err
 
 		ioxid, ioxidBind, ioxidErr := s.performIOXIDLookupConn(ioxidConn)
 		_ = ioxidConn.Close()
-		if results.Bind == nil && ioxidBind != nil {
-			results.Bind = ioxidBind
-		}
+		attachBindResult(results, ioxidBind, false)
 		if ioxidErr != nil {
 			ioxid.Error = ioxidErr.Error()
 		}
@@ -267,9 +271,7 @@ func (s *Scanner) scanHTTP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, er
 		ntlmToken, _ := buildNTLMNegotiateToken()
 		bind, _, bindErr := s.performBind(ntlmConn, uuidEndpointMapper, 3, 0, 1, ntlmToken)
 		_ = ntlmConn.Close()
-		if bind != nil {
-			results.Bind = bind
-		}
+		attachBindResult(results, bind, true)
 		if bindErr != nil {
 			return finish(zgrab2.TryGetScanStatus(bindErr), bindErr)
 		}
@@ -295,9 +297,7 @@ func (s *Scanner) scanHTTP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, er
 
 		epm, epmBind, epmErr := s.performEPMLookupConn(epmConn, target)
 		_ = epmConn.Close()
-		if results.Bind == nil && epmBind != nil {
-			results.Bind = epmBind
-		}
+		attachBindResult(results, epmBind, false)
 		if epmErr != nil {
 			return finish(zgrab2.TryGetScanStatus(epmErr), epmErr)
 		}
@@ -321,9 +321,7 @@ func (s *Scanner) scanHTTP(target zgrab2.ScanTarget) (zgrab2.ScanStatus, any, er
 
 		ioxid, ioxidBind, ioxidErr := s.performIOXIDLookupConn(ioxidConn)
 		_ = ioxidConn.Close()
-		if results.Bind == nil && ioxidBind != nil {
-			results.Bind = ioxidBind
-		}
+		attachBindResult(results, ioxidBind, false)
 		if ioxidErr != nil {
 			ioxid.Error = ioxidErr.Error()
 		}

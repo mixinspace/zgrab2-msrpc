@@ -71,6 +71,9 @@ func (s *Scanner) performBind(conn net.Conn, ifaceUUID string, versMajor, versMi
 
 	if pdu.AuthLen > 0 || len(ntlmToken) > 0 {
 		ch, _ := parseNTLMChallengeFromPDU(pdu.Wire)
+		if ch != nil {
+			ch.AssociationGroupID = res.AssociationGroupID
+		}
 		res.NTLMChallenge = ch
 	}
 
@@ -118,7 +121,7 @@ func parseBindAckSecondaryEndpoint(body []byte, secAddrLen int) *SecondaryEndpoi
 	if port, convErr := strconv.Atoi(raw); convErr == nil && port >= 0 && port <= 65535 {
 		ep.Port = uint16(port)
 	}
-	
+
 	return ep
 }
 
@@ -354,7 +357,7 @@ func rpcContinuationBody(fragment *rpcFragment) ([]byte, error) {
 	return fragment.Body[rpcRespPrefixSize:], nil
 	// cuz its fragment of same callid we should cut tech info from start
 	// then glue it for full mesg
-	
+
 	/*
 	   alloc_hint 4 byte
 	   context_id 2 byte
