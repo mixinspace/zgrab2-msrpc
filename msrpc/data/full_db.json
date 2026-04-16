@@ -1,26 +1,4 @@
 {
-  "000001a0-0000-0000-c000-000000000046": {
-    "name": "IRemoteSCMActivator",
-    "protocol": "MS-DCOM",
-    "provider": "rpcss.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DCOM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DCOM].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": "Open Source MappingDB",
-        "reference": "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json"
-      }
-    }
-  },
   "00efb8be-002d-45cd-81b0-f65b260f8a13": {
     "name": "SrvRpcActionObject RPC interface",
     "protocol": null,
@@ -3111,37 +3089,6 @@
       }
     }
   },
-  "4d9f4ab8-7d1c-11cf-861e-0020af6e7c57": {
-    "name": "IActivation",
-    "protocol": "MS-DCOM",
-    "provider": "rpcss.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DCOM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DCOM].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
-        ]
-      }
-    }
-  },
   "4da1c422-943d-11d1-acae-00c04fc2aa3f": {
     "name": "MS-DLTM RPC interface",
     "protocol": "MS-DLTM",
@@ -5650,23 +5597,6 @@
       }
     }
   },
-  "97199110-db2e-11d1-a251-0000f805ca53": {
-    "name": "ITransactionStream",
-    "protocol": "MS-COM",
-    "provider": null,
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-COM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-COM].pdf"
-      }
-    }
-  },
   "97be9507-17da-4999-87d7-66c0b2d83cc7": {
     "name": null,
     "protocol": null,
@@ -5745,37 +5675,6 @@
           "dump2.txt",
           "endpoints.txt",
           "scan.txt"
-        ]
-      }
-    }
-  },
-  "99fcfec4-5260-101b-bbcb-00aa0021347a": {
-    "name": "IObjectExporter",
-    "protocol": "MS-DCOM",
-    "provider": "rpcss.dll",
-    "sources": {
-      "name": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DCOM].pdf"
-      },
-      "protocol": {
-        "is_documented": true,
-        "description": "Official Microsoft Specification",
-        "reference": "[MS-DCOM].pdf"
-      },
-      "provider": {
-        "is_documented": false,
-        "description": [
-          "Open Source MappingDB",
-          "local RPC dump"
-        ],
-        "reference": [
-          "rpc_resolve.h",
-          "RPC_UUID_Map_Windows10_1909_18363.1977.rpcdb.json",
-          "rpc_dump_august.txt",
-          "rpc_dump_rs5.txt",
-          "rpc_dump_rs4.txt"
         ]
       }
     }
